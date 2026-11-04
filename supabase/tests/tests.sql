@@ -353,4 +353,14 @@ select pg_temp.assert(
   = (select sum(points) from public.score_events), 'total = suma de movimientos');
 reset role;
 
+-- 11. Rotación de la clave de TV (sin pgcrypto en el search_path) ------------
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.assert(public.admin_rotate_tv_key() ~ '^[0-9a-f]{64}$', 'nueva clave TV de 64 hex');
+select pg_temp.assert(public.admin_regenerate_invite_code() ~ '^[A-Z2-9]{6}$', 'nuevo código de invitación');
+reset role;
+set role anon;
+select pg_temp.expect_error(format($$select public.get_tv_state(%L)$$, :'tvkey'), 'Clave de pantalla');
+reset role;
+
 select 'TODAS LAS PRUEBAS SUPERADAS' as resultado;
