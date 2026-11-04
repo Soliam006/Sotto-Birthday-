@@ -48,3 +48,6 @@ Thumbs.db
 .env.*
 !.env.example
 .vercel
+
+# Generado por scripts/set-env.mjs
+/src/environments/environment.ts

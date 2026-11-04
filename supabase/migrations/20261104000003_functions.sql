@@ -390,10 +390,7 @@ begin
   end if;
   select * into v from public.challenges where id = p_challenge_id for update;
   if not found then perform public._raise('Modalidad no encontrada.'); end if;
-  if v.status = 'finished' and p_status <> 'finished' and v.results_confirmed_at is not null then
-    -- Reabrir está permitido (p. ej. por error), los puntos confirmados no se repiten.
-    null;
-  end if;
+  -- Reabrir una modalidad finalizada está permitido: los puntos confirmados no se repiten (source_key).
 
   if p_status = 'in_progress' then
     perform public._assert_competition_open();
