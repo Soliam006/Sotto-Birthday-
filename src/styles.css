@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-ink-950: #07080d;
+  --color-ink-900: #0d0f17;
+  --color-ink-850: #121521;
+  --color-ink-800: #181c2b;
+  --color-ink-700: #23283b;
+  --color-ink-600: #343b55;
+  --color-gold: #fbbf24;
+  --color-gold-soft: #fde68a;
+  --color-neon: #a78bfa;
+  --animate-pop: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+  --animate-rise: rise 0.4s ease-out both;
+  --animate-shine: shine 3s linear infinite;
+}
+
+@keyframes pop { 0% { transform: scale(0.85); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
+@keyframes rise { 0% { transform: translateY(12px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
+@keyframes shine { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+
+:root { color-scheme: dark; }
+
+html, body { min-height: 100%; }
+body {
+  @apply bg-ink-950 text-slate-100 font-sans antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgb(124 58 237 / 0.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgb(251 191 36 / 0.10), transparent 60%);
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility title-xl { @apply font-display text-4xl leading-none tracking-wide;
+}
+@utility title-lg { @apply font-display text-3xl leading-none tracking-wide;
+}
+@utility title-md { @apply font-display text-2xl leading-none tracking-wide;
+}
+@utility card { @apply rounded-2xl border border-white/8 bg-ink-850/90 p-4 shadow-lg shadow-black/30 backdrop-blur;
+}
+@utility card-tight { @apply rounded-xl border border-white/8 bg-ink-800/80 p-3;
+}
+@utility btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 select-none;
+}
+@utility btn-primary { @apply btn bg-gradient-to-r from-amber-400 to-orange-500 text-ink-950 shadow-lg shadow-orange-500/20 hover:brightness-110;
+}
+@utility btn-secondary { @apply btn border border-white/10 bg-ink-700 text-slate-100 hover:bg-ink-600;
+}
+@utility btn-ghost { @apply btn text-slate-300 hover:bg-white/5;
+}
+@utility btn-danger { @apply btn bg-rose-600 text-white hover:bg-rose-500;
+}
+@utility btn-success { @apply btn bg-emerald-500 text-ink-950 hover:bg-emerald-400;
+}
+@utility btn-sm { @apply min-h-9 px-3 py-1.5 text-xs;
+}
+@utility input {
+    @apply w-full min-h-11 rounded-xl border border-white/10 bg-ink-900 px-3 py-2.5 text-base text-slate-100
+           placeholder:text-slate-500 outline-none transition focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/20;
+}
+@utility label { @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400;
+}
+@utility chip { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+@utility muted { @apply text-slate-400;
+}
+@utility section-title { @apply mb-3 flex items-center justify-between gap-2 font-display text-xl tracking-wider text-slate-200;
+}
+@utility gold-text {
+    background: linear-gradient(90deg, #fde68a, #fbbf24, #f97316, #fbbf24, #fde68a);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    @apply animate-shine;
+}
+
+/* Scrollbar discreta */
+* { scrollbar-width: thin; scrollbar-color: #343b55 transparent; }
