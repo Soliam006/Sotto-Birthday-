@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -14,7 +15,7 @@ const INVITE_KEY = 'birthday-cup-invite';
  */
 @Component({
   selector: 'app-join-page',
-  imports: [FormsModule, RouterLink, Spinner],
+  imports: [MatIcon, FormsModule, RouterLink, Spinner],
   template: `
     <main class="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-8 pt-[max(2.5rem,env(safe-area-inset-top))]">
       <header class="mb-8 text-center">
@@ -49,7 +50,7 @@ const INVITE_KEY = 'birthday-cup-invite';
           }
           @if (error()) { <p class="rounded-lg bg-rose-950/60 p-3 text-sm text-rose-200">{{ error() }}</p> }
           <button type="submit" class="btn-primary text-base" [disabled]="name().trim().length < 2 || !code().trim()">
-            ¡A competir! 🚀
+            ¡A competir! <mat-icon>rocket_launch</mat-icon>
           </button>
         </form>
       }

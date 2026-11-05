@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -6,11 +7,11 @@ import { toFriendlyMessage } from '../../core/supabase.service';
 
 @Component({
   selector: 'app-admin-login',
-  imports: [FormsModule, RouterLink],
+  imports: [MatIcon, FormsModule, RouterLink],
   template: `
     <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5 py-10">
       <div class="mb-6 text-center">
-        <div class="text-5xl">⚖️</div>
+        <div class="text-5xl"><mat-icon>gavel</mat-icon></div>
         <h1 class="font-display gold-text text-5xl">PANEL DEL JUEZ</h1>
         <p class="text-sm text-slate-400">BIRTHDAY CUP</p>
       </div>
@@ -33,7 +34,7 @@ import { toFriendlyMessage } from '../../core/supabase.service';
           Este dispositivo está vinculado a un jugador. Si inicias sesión como juez, se cerrará esa sesión de jugador.
         </p>
       }
-      <a routerLink="/" class="mt-6 text-center text-xs text-slate-500">← Volver</a>
+      <a routerLink="/" class="mt-6 text-center text-xs text-slate-500"><mat-icon>arrow_back</mat-icon> Volver</a>
     </main>
   `,
 })

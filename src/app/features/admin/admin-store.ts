@@ -90,8 +90,8 @@ export class AdminStore {
     ]);
     const next = { missions: m.count ?? 0, discoveries: d.count ?? 0 };
     const prev = this.pending();
-    if (notify && next.missions > prev.missions) this.toast.info('🕵️ Nueva misión pendiente de validar');
-    if (notify && next.discoveries > prev.discoveries) this.toast.info('🎯 Nueva acusación pendiente de revisar');
+    if (notify && next.missions > prev.missions) this.toast.info('Nueva misión pendiente de validar');
+    if (notify && next.discoveries > prev.discoveries) this.toast.info('Nueva acusación pendiente de revisar');
     this.pending.set(next);
   }
 }

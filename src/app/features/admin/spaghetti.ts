@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { syncServerClock } from '../../core/clock';
@@ -15,9 +16,9 @@ import { ChallengeControls } from './challenge-controls';
 
 @Component({
   selector: 'app-admin-spaghetti',
-  imports: [FormsModule, RouterLink, Spinner, Countdown, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, FormsModule, RouterLink, Spinner, Countdown, ChallengeControls, AllocationPreview],
   template: `
-    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400">← Modalidades</a>
+    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400"><mat-icon>arrow_back</mat-icon> Modalidades</a>
     <app-challenge-controls kind="spaghetti" />
     @let ch = store.challenge('spaghetti');
 
@@ -26,19 +27,21 @@ import { ChallengeControls } from './challenge-controls';
       <div class="grid gap-4 lg:grid-cols-2">
         <!-- Imagen -->
         <section class="card">
-          <h2 class="section-title">🖼️ Imagen de referencia</h2>
+          <h2 class="section-title"><mat-icon>image</mat-icon> Imagen de referencia</h2>
           @if (s.reference_image_path) {
             <img [src]="imageUrl(s.reference_image_path)" alt="Referencia" class="mb-3 max-h-72 w-full rounded-xl bg-black object-contain" />
           } @else {
             <p class="mb-3 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-400">Aún no has subido la imagen</p>
           }
           <label class="btn-secondary w-full cursor-pointer">
-            {{ uploading() ? 'Subiendo…' : (s.reference_image_path ? '🔁 Sustituir imagen' : '📤 Subir imagen') }}
+            <mat-icon>{{ uploading() ? 'hourglass_top' : s.reference_image_path ? 'swap_horiz' : 'upload' }}</mat-icon>
+            {{ uploading() ? 'Subiendo…' : (s.reference_image_path ? 'Sustituir imagen' : 'Subir imagen') }}
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" (change)="upload($event)" [disabled]="uploading()" />
           </label>
           @if (s.reference_image_path) {
             <button class="mt-2 w-full" [class]="s.reference_visible ? 'btn-ghost w-full mt-2' : 'btn-primary w-full mt-2'" (click)="toggleVisible(!s.reference_visible)">
-              {{ s.reference_visible ? '🙈 Ocultar a los jugadores' : '👁️ Mostrar a todos los jugadores' }}
+              <mat-icon>{{ s.reference_visible ? 'visibility_off' : 'visibility' }}</mat-icon>
+              {{ s.reference_visible ? 'Ocultar a los jugadores' : 'Mostrar a todos los jugadores' }}
             </button>
             <p class="mt-1 text-center text-xs" [class]="s.reference_visible ? 'text-emerald-300' : 'text-slate-500'">
               {{ s.reference_visible ? 'Visible en los móviles de los jugadores' : 'Oculta para los jugadores' }}
@@ -48,20 +51,20 @@ import { ChallengeControls } from './challenge-controls';
 
         <!-- Cronómetro -->
         <section class="card flex flex-col items-center">
-          <h2 class="section-title self-stretch">⏱️ Cronómetro global</h2>
+          <h2 class="section-title self-stretch"><mat-icon>timer</mat-icon> Cronómetro global</h2>
           <app-countdown [status]="s.timer_status" [endsAt]="s.ends_at" [pausedMs]="s.paused_remaining_ms" [durationSeconds]="s.duration_seconds" size="lg" />
           <p class="mt-1 text-xs text-slate-500">Sincronizado con el servidor: todos los dispositivos ven el mismo tiempo.</p>
           <div class="mt-4 flex w-full flex-wrap justify-center gap-2">
             @switch (s.timer_status) {
               @case ('running') {
-                <button class="btn-secondary" (click)="timer('pause')">⏸ Pausar</button>
-                <button class="btn-primary" (click)="timer('finish')">🏁 Terminar</button>
-                <button class="btn-ghost text-rose-300" (click)="timer('cancel')">✖ Cancelar</button>
+                <button class="btn-secondary" (click)="timer('pause')"><mat-icon>pause</mat-icon> Pausar</button>
+                <button class="btn-primary" (click)="timer('finish')"><mat-icon>sports_score</mat-icon> Terminar</button>
+                <button class="btn-ghost text-rose-300" (click)="timer('cancel')"><mat-icon>close</mat-icon> Cancelar</button>
               }
               @case ('paused') {
-                <button class="btn-success" (click)="timer('resume')">▶️ Reanudar</button>
-                <button class="btn-primary" (click)="timer('finish')">🏁 Terminar</button>
-                <button class="btn-ghost text-rose-300" (click)="timer('cancel')">✖ Cancelar</button>
+                <button class="btn-success" (click)="timer('resume')"><mat-icon>play_arrow</mat-icon> Reanudar</button>
+                <button class="btn-primary" (click)="timer('finish')"><mat-icon>sports_score</mat-icon> Terminar</button>
+                <button class="btn-ghost text-rose-300" (click)="timer('cancel')"><mat-icon>close</mat-icon> Cancelar</button>
               }
               @default {
                 @if (s.timer_status === 'idle' || s.timer_status === 'cancelled') {
@@ -69,9 +72,9 @@ import { ChallengeControls } from './challenge-controls';
                     <input type="number" min="1" max="240" class="input w-20 text-center" [(ngModel)]="minutes" name="min" />
                     <span class="text-sm text-slate-400">min</span>
                   </div>
-                  <button class="btn-success" (click)="timer('start')" [disabled]="ch?.status === 'finished'">▶️ Iniciar prueba</button>
+                  <button class="btn-success" (click)="timer('start')" [disabled]="ch?.status === 'finished'"><mat-icon>play_arrow</mat-icon> Iniciar prueba</button>
                 }
-                @if (s.timer_status !== 'idle') { <button class="btn-ghost" (click)="timer('reset')">↺ Reiniciar</button> }
+                @if (s.timer_status !== 'idle') { <button class="btn-ghost" (click)="timer('reset')"><mat-icon>restart_alt</mat-icon> Reiniciar</button> }
               }
             }
           </div>
@@ -82,7 +85,7 @@ import { ChallengeControls } from './challenge-controls';
       <section class="card mt-4">
         <h2 class="section-title">🏆 Clasificación final</h2>
         @if (ch?.results_confirmed_at) {
-          <p class="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-200">✔ Clasificación confirmada e incorporada a la puntuación.</p>
+          <p class="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-200"><mat-icon>check</mat-icon> Clasificación confirmada e incorporada a la puntuación.</p>
         } @else {
           <p class="mb-3 text-xs text-slate-400">Asigna la posición de cada equipo. En caso de empate usa la misma posición y salta las siguientes (1, 1, 3…).</p>
           <div class="flex flex-col gap-2">
@@ -99,7 +102,7 @@ import { ChallengeControls } from './challenge-controls';
           </div>
           @if (preview(); as pv) { <div class="mt-3"><app-allocation-preview [rows]="pv" /></div> }
           <div class="mt-3 flex gap-2">
-            <button class="btn-secondary flex-1" (click)="doPreview()">👁️ Calcular</button>
+            <button class="btn-secondary flex-1" (click)="doPreview()"><mat-icon>visibility</mat-icon> Calcular</button>
             <button class="btn-primary flex-1" [disabled]="!preview() || busy()" (click)="confirmRanking()">Confirmar y sumar puntos</button>
           </div>
         }

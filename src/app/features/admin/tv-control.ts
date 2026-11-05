@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
 import { TvMode, TvSettings } from '../../core/models';
@@ -10,20 +11,20 @@ import { AdminStore } from './admin-store';
 
 @Component({
   selector: 'app-admin-tv',
-  imports: [FormsModule, QrCodeView, Spinner],
+  imports: [MatIcon, FormsModule, QrCodeView, Spinner],
   template: `
     <h1 class="title-xl mb-1">Pantalla TV</h1>
     <p class="mb-4 text-sm text-slate-400">Abre el enlace en el navegador de la televisión. Funciona de forma independiente: puedes cerrar este panel.</p>
 
     @if (tv(); as t) {
       <section class="card mb-4">
-        <h2 class="section-title">📺 ¿Qué muestra la TV?</h2>
+        <h2 class="section-title"><mat-icon>tv</mat-icon> ¿Qué muestra la TV?</h2>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           @for (m of modes; track m.id) {
             <button class="flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition"
                     [class]="t.mode === m.id ? 'border-amber-400 bg-amber-400/10' : 'border-white/5 bg-ink-800'"
                     [disabled]="m.needsReveal && !revealed()" [class.opacity-40]="m.needsReveal && !revealed()" (click)="setMode(m.id)">
-              <span class="text-2xl">{{ m.icon }}</span>
+              @if (m.emoji) { <span class="text-2xl leading-none">{{ m.icon }}</span> } @else { <mat-icon class="icon-lg">{{ m.icon }}</mat-icon> }
               <span class="text-sm font-semibold">{{ m.label }}</span>
               <span class="text-xs text-slate-400">{{ m.hint }}</span>
             </button>
@@ -36,30 +37,30 @@ import { AdminStore } from './admin-store';
         <h2 class="section-title">👑 Final de la competición</h2>
         @if (store.settings()?.status !== 'finished') {
           <p class="mb-3 text-sm text-slate-300">Cuando terminen todas las pruebas, finaliza la competición. Se bloquearán nuevos puntos.</p>
-          <button class="btn-secondary w-full" (click)="finishCompetition()">🏁 Finalizar competición</button>
+          <button class="btn-secondary w-full" (click)="finishCompetition()"><mat-icon>sports_score</mat-icon> Finalizar competición</button>
         } @else {
           <p class="mb-3 text-sm text-slate-300">Competición finalizada. Pulsa para lanzar la animación de revelación en la TV.</p>
           <button class="btn-primary w-full py-4 text-lg" (click)="reveal()">🏆 REVELAR GANADOR</button>
           <div class="mt-2 flex flex-wrap gap-2">
-            <button class="btn-ghost btn-sm" (click)="reopen()">↩️ Reabrir competición</button>
+            <button class="btn-ghost btn-sm" (click)="reopen()"><mat-icon>undo</mat-icon> Reabrir competición</button>
           </div>
         }
       </section>
 
       <section class="card mb-4">
-        <h2 class="section-title">💬 Pantalla de espera</h2>
+        <h2 class="section-title"><mat-icon>chat_bubble</mat-icon> Pantalla de espera</h2>
         <textarea class="input min-h-16" [(ngModel)]="message" name="msg" maxlength="200"></textarea>
         <label class="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" [(ngModel)]="showTimer" name="timer" class="size-5" /> Mostrar el cronómetro de Spaghetti cuando esté en marcha</label>
         <button class="btn-secondary mt-3 w-full" (click)="saveText()">Guardar</button>
       </section>
 
       <section class="card">
-        <h2 class="section-title">🔗 Enlace de la TV</h2>
+        <h2 class="section-title"><mat-icon>link</mat-icon> Enlace de la TV</h2>
         <app-qr [text]="tvUrl()" [size]="180" />
         <div class="mt-3 flex flex-wrap gap-2">
-          <a class="btn-primary flex-1" [href]="tvUrl()" target="_blank" rel="noopener">Abrir pantalla TV ↗</a>
-          <button class="btn-secondary" (click)="copy()">📋 Copiar</button>
-          <button class="btn-ghost" (click)="rotate()">🔑 Nueva clave</button>
+          <a class="btn-primary flex-1" [href]="tvUrl()" target="_blank" rel="noopener">Abrir pantalla TV <mat-icon>open_in_new</mat-icon></a>
+          <button class="btn-secondary" (click)="copy()"><mat-icon>content_copy</mat-icon> Copiar</button>
+          <button class="btn-ghost" (click)="rotate()"><mat-icon>key</mat-icon> Nueva clave</button>
         </div>
         <p class="mt-2 text-xs text-slate-500">La clave da acceso solo de lectura a la clasificación según el modo elegido. No otorga permisos de juez.</p>
       </section>
@@ -78,12 +79,13 @@ export class AdminTv implements OnInit {
   protected readonly revealed = computed(() => !!this.store.settings()?.winner_revealed_at);
   protected readonly tvUrl = computed(() => `${location.origin}/tv?key=${this.tv()?.access_key ?? ''}`);
 
-  protected readonly modes: { id: TvMode; icon: string; label: string; hint: string; needsReveal?: boolean }[] = [
-    { id: 'leaderboard', icon: '🏆', label: 'Clasificación', hint: 'Con puntuaciones' },
-    { id: 'leaderboard_no_scores', icon: '🎭', label: 'Sin puntuaciones', hint: 'Solo posiciones' },
-    { id: 'waiting', icon: '⏳', label: 'Espera', hint: 'Equipos y mensaje' },
-    { id: 'final_results', icon: '📊', label: 'Resultados finales', hint: 'Tras revelar', needsReveal: true },
-    { id: 'champion', icon: '👑', label: 'Campeón', hint: 'Tras revelar', needsReveal: true },
+  /** icon: nombre Material Symbols, o emoji si emoji = true (copa y corona se mantienen) */
+  protected readonly modes: { id: TvMode; icon: string; emoji?: boolean; label: string; hint: string; needsReveal?: boolean }[] = [
+    { id: 'leaderboard', icon: '🏆', emoji: true, label: 'Clasificación', hint: 'Con puntuaciones' },
+    { id: 'leaderboard_no_scores', icon: 'theater_comedy', label: 'Sin puntuaciones', hint: 'Solo posiciones' },
+    { id: 'waiting', icon: 'hourglass_top', label: 'Espera', hint: 'Equipos y mensaje' },
+    { id: 'final_results', icon: 'bar_chart', label: 'Resultados finales', hint: 'Tras revelar', needsReveal: true },
+    { id: 'champion', icon: '👑', emoji: true, label: 'Campeón', hint: 'Tras revelar', needsReveal: true },
   ];
 
   async ngOnInit(): Promise<void> {

@@ -1,10 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [MatIcon, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     @let team = store.team();
     <div class="min-h-dvh pb-24" [style.--team]="team?.color ?? '#a78bfa'">
@@ -34,7 +35,7 @@ import { PlayerStore } from './player-store';
                  [routerLinkActiveOptions]="{ exact: item.path === '/player' }"
                  class="relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold text-slate-400 transition">
                 <span class="bar absolute inset-x-6 top-0 h-0.5 rounded-full opacity-0 transition" [style.background]="team?.color ?? '#fbbf24'"></span>
-                <span class="ico text-xl transition">{{ item.icon }}</span>
+                <mat-icon class="ico icon-md transition">{{ item.icon }}</mat-icon>
                 {{ item.label }}
               </a>
             </li>
@@ -47,10 +48,10 @@ import { PlayerStore } from './player-store';
 export class PlayerLayout implements OnInit {
   protected readonly store = inject(PlayerStore);
   protected readonly nav = [
-    { path: '/player', label: 'Inicio', icon: '🏠' },
-    { path: '/player/modalities', label: 'Modalidades', icon: '🎮' },
-    { path: '/player/missions', label: 'Mis misiones', icon: '🕵️' },
-    { path: '/player/team', label: 'Mi equipo', icon: '🛡️' },
+    { path: '/player', label: 'Inicio', icon: 'home' },
+    { path: '/player/modalities', label: 'Modalidades', icon: 'stadia_controller' },
+    { path: '/player/missions', label: 'Mis misiones', icon: 'mystery' },
+    { path: '/player/team', label: 'Mi equipo', icon: 'shield' },
   ];
   ngOnInit(): void {
     this.store.start();

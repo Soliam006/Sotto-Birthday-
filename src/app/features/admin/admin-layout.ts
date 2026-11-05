@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConfirmService } from '../../core/confirm.service';
@@ -8,7 +9,7 @@ interface NavItem { path: string; label: string; icon: string; exact?: boolean }
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [MatIcon, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <div class="min-h-dvh lg:flex">
       <!-- Barra lateral (escritorio) -->
@@ -21,18 +22,18 @@ interface NavItem { path: string; label: string; icon: string; exact?: boolean }
           @for (item of nav; track item.path) {
             <a [routerLink]="item.path" routerLinkActive="!bg-white/10 !text-white" [routerLinkActiveOptions]="{ exact: !!item.exact }"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
-              <span class="text-lg">{{ item.icon }}</span>{{ item.label }}
+              <mat-icon class="icon-md">{{ item.icon }}</mat-icon>{{ item.label }}
               @if (item.path === '/admin/missions' && pendingCount()) { <span class="ml-auto chip bg-amber-500 text-ink-950">{{ pendingCount() }}</span> }
             </a>
           }
         </nav>
-        <button class="btn-ghost justify-start text-slate-500" (click)="logout()">🚪 Cerrar sesión</button>
+        <button class="btn-ghost justify-start text-slate-500" (click)="logout()"><mat-icon>logout</mat-icon> Cerrar sesión</button>
       </aside>
 
       <div class="min-w-0 flex-1 pb-24 lg:pb-8">
         <header class="sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-ink-950/85 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-lg lg:hidden">
           <span class="font-display gold-text text-2xl">BIRTHDAY CUP</span>
-          <span class="chip bg-amber-500/15 text-amber-300">⚖️ JUEZ</span>
+          <span class="chip bg-amber-500/15 text-amber-300"><mat-icon>gavel</mat-icon> JUEZ</span>
         </header>
         @if (store.error()) {
           <div class="mx-4 mt-3 rounded-xl bg-rose-950/60 p-3 text-sm text-rose-200">{{ store.error() }}
@@ -50,7 +51,7 @@ interface NavItem { path: string; label: string; icon: string; exact?: boolean }
             <li>
               <a [routerLink]="item.path" routerLinkActive="!text-amber-300" [routerLinkActiveOptions]="{ exact: !!item.exact }"
                  class="relative flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold text-slate-400" (click)="moreOpen.set(false)">
-                <span class="text-xl">{{ item.icon }}</span>{{ item.label }}
+                <mat-icon class="icon-md">{{ item.icon }}</mat-icon>{{ item.label }}
                 @if (item.path === '/admin/missions' && pendingCount()) {
                   <span class="absolute right-3 top-1.5 grid size-4 place-items-center rounded-full bg-amber-500 text-[10px] text-ink-950">{{ pendingCount() }}</span>
                 }
@@ -60,7 +61,7 @@ interface NavItem { path: string; label: string; icon: string; exact?: boolean }
           <li>
             <button type="button" class="flex w-full flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold"
                     [class]="moreOpen() ? 'text-amber-300' : 'text-slate-400'" (click)="moreOpen.set(!moreOpen())">
-              <span class="text-xl">☰</span>Más
+              <span class="text-xl"><mat-icon>menu</mat-icon></span>Más
             </button>
           </li>
         </ul>
@@ -73,11 +74,11 @@ interface NavItem { path: string; label: string; icon: string; exact?: boolean }
               @for (item of secondary; track item.path) {
                 <a [routerLink]="item.path" (click)="moreOpen.set(false)" routerLinkActive="!border-amber-400/50"
                    class="flex flex-col items-center gap-1 rounded-2xl border border-white/5 bg-ink-800 p-3 text-xs font-semibold">
-                  <span class="text-2xl">{{ item.icon }}</span>{{ item.label }}
+                  <mat-icon class="icon-lg">{{ item.icon }}</mat-icon>{{ item.label }}
                 </a>
               }
               <button type="button" (click)="logout()" class="flex flex-col items-center gap-1 rounded-2xl border border-white/5 bg-ink-800 p-3 text-xs font-semibold text-slate-400">
-                <span class="text-2xl">🚪</span>Salir
+                <span class="text-2xl"><mat-icon>logout</mat-icon></span>Salir
               </button>
             </div>
           </div>
@@ -95,15 +96,15 @@ export class AdminLayout implements OnInit, OnDestroy {
   protected readonly pendingCount = computed(() => this.store.pending().missions + this.store.pending().discoveries);
 
   protected readonly nav: NavItem[] = [
-    { path: '/admin', label: 'Dashboard', icon: '📊', exact: true },
-    { path: '/admin/players', label: 'Participantes', icon: '👥' },
-    { path: '/admin/teams', label: 'Equipos', icon: '🛡️' },
-    { path: '/admin/modalities', label: 'Modalidades', icon: '🎮' },
-    { path: '/admin/duels', label: 'Duelos', icon: '♟️' },
-    { path: '/admin/missions', label: 'Misiones', icon: '🕵️' },
-    { path: '/admin/scores', label: 'Puntuaciones', icon: '🏆' },
-    { path: '/admin/tv', label: 'Pantalla TV', icon: '📺' },
-    { path: '/admin/settings', label: 'Configuración', icon: '⚙️' },
+    { path: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
+    { path: '/admin/players', label: 'Participantes', icon: 'group' },
+    { path: '/admin/teams', label: 'Equipos', icon: 'shield' },
+    { path: '/admin/modalities', label: 'Modalidades', icon: 'stadia_controller' },
+    { path: '/admin/duels', label: 'Duelos', icon: 'chess' },
+    { path: '/admin/missions', label: 'Misiones', icon: 'mystery' },
+    { path: '/admin/scores', label: 'Puntuaciones', icon: 'leaderboard' },
+    { path: '/admin/tv', label: 'Pantalla TV', icon: 'tv' },
+    { path: '/admin/settings', label: 'Configuración', icon: 'settings' },
   ];
   protected readonly primary = this.nav.filter((n) => ['/admin', '/admin/modalities', '/admin/duels', '/admin/missions'].includes(n.path));
   protected readonly secondary = this.nav.filter((n) => !this.primary.includes(n));

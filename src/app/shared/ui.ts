@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { ChallengeStatus, STATUS_LABELS } from '../core/models';
 
 @Component({
@@ -16,9 +17,10 @@ export class Spinner {
 
 @Component({
   selector: 'app-empty',
+  imports: [MatIcon],
   template: `
     <div class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center">
-      <span class="text-3xl">{{ icon() }}</span>
+      <mat-icon class="icon-xl text-slate-500">{{ icon() }}</mat-icon>
       <p class="font-semibold text-slate-200">{{ title() }}</p>
       @if (text()) { <p class="max-w-sm text-sm text-slate-400">{{ text() }}</p> }
       <ng-content />
@@ -26,16 +28,18 @@ export class Spinner {
   `,
 })
 export class Empty {
-  readonly icon = input('🫥');
+  /** Nombre del icono Material Symbols */
+  readonly icon = input('inbox');
   readonly title = input.required<string>();
   readonly text = input<string>('');
 }
 
 @Component({
   selector: 'app-error-box',
+  imports: [MatIcon],
   template: `
     <div class="flex flex-col items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-950/40 px-4 py-6 text-center">
-      <span class="text-2xl">⚠️</span>
+      <mat-icon class="icon-lg text-rose-300">warning</mat-icon>
       <p class="text-sm text-rose-100">{{ message() }}</p>
       <ng-content />
     </div>

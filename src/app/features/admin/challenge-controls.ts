@@ -1,4 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { CHALLENGE_ICONS, ChallengeKind, ChallengeStatus } from '../../core/models';
 import { ConfirmService } from '../../core/confirm.service';
 import { SupabaseService } from '../../core/supabase.service';
@@ -9,12 +10,12 @@ import { AdminStore } from './admin-store';
 /** Cabecera de modalidad con el control de estado (pendiente → preparación → en curso → finalizada). */
 @Component({
   selector: 'app-challenge-controls',
-  imports: [StatusBadge],
+  imports: [MatIcon, StatusBadge],
   template: `
     @if (challenge(); as c) {
       <header class="mb-4">
         <div class="flex items-start gap-3">
-          <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-ink-700 text-2xl">{{ icons[c.kind] }}</span>
+          <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-ink-700 text-amber-300"><mat-icon class="icon-md">{{ icons[c.kind] }}</mat-icon></span>
           <div class="min-w-0 flex-1">
             <p class="text-[11px] uppercase tracking-widest text-slate-400">{{ c.tagline }}</p>
             <h1 class="font-display text-3xl leading-none sm:text-4xl">{{ c.name }}</h1>
@@ -23,17 +24,17 @@ import { AdminStore } from './admin-store';
         </div>
         <div class="mt-3 flex flex-wrap gap-2">
           @if (c.status === 'pending') {
-            <button class="btn-secondary btn-sm" (click)="set('preparing')">🛠️ Pasar a preparación</button>
+            <button class="btn-secondary btn-sm" (click)="set('preparing')"><mat-icon>build</mat-icon> Pasar a preparación</button>
           }
           @if (c.status === 'pending' || c.status === 'preparing') {
-            <button class="btn-success btn-sm" (click)="set('in_progress')">▶️ Iniciar modalidad</button>
+            <button class="btn-success btn-sm" (click)="set('in_progress')"><mat-icon>play_arrow</mat-icon> Iniciar modalidad</button>
           }
           @if (c.status === 'in_progress') {
-            <button class="btn-primary btn-sm" (click)="set('finished')">🏁 Finalizar modalidad</button>
-            <button class="btn-ghost btn-sm" (click)="set('preparing')">⏸ Detener (volver a preparación)</button>
+            <button class="btn-primary btn-sm" (click)="set('finished')"><mat-icon>sports_score</mat-icon> Finalizar modalidad</button>
+            <button class="btn-ghost btn-sm" (click)="set('preparing')"><mat-icon>pause</mat-icon> Detener (volver a preparación)</button>
           }
           @if (c.status === 'finished') {
-            <button class="btn-ghost btn-sm" (click)="set('in_progress')">↩️ Reabrir</button>
+            <button class="btn-ghost btn-sm" (click)="set('in_progress')"><mat-icon>undo</mat-icon> Reabrir</button>
           }
         </div>
       </header>
@@ -62,7 +63,7 @@ export class ChallengeControls {
     if (!ok) return;
     try {
       await this.sb.rpc('admin_set_challenge_status', { p_challenge_id: c.id, p_status: status });
-      this.toast.success(`${c.name}: ${texts[status][0].toLowerCase()} ✔`);
+      this.toast.success(`${c.name}: ${texts[status][0].toLowerCase()}`);
       await this.store.loadChallenges();
     } catch (e) {
       this.toast.error(e);

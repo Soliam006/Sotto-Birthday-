@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LiveService } from '../../core/live.service';
@@ -21,7 +22,7 @@ interface DashboardData {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, DatePipe, Leaderboard, Spinner, StatusBadge, Empty],
+  imports: [MatIcon, RouterLink, DatePipe, Leaderboard, Spinner, StatusBadge, Empty],
   template: `
     <div class="mb-5 flex flex-wrap items-end justify-between gap-2">
       <div>
@@ -29,7 +30,8 @@ interface DashboardData {
         <h1 class="title-xl">Dashboard</h1>
       </div>
       <span class="chip" [class]="store.settings()?.scores_visible ? 'bg-emerald-500/15 text-emerald-300' : 'bg-violet-500/15 text-violet-300'">
-        {{ store.settings()?.scores_visible ? '👁️ Clasificación visible' : '🙈 Clasificación oculta' }}
+        <mat-icon>{{ store.settings()?.scores_visible ? 'visibility' : 'visibility_off' }}</mat-icon>
+        {{ store.settings()?.scores_visible ? 'Clasificación visible' : 'Clasificación oculta' }}
       </span>
     </div>
 
@@ -46,20 +48,20 @@ interface DashboardData {
 
       <div class="grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 class="section-title">🏆 Clasificación real <a routerLink="/admin/scores" class="font-sans text-xs text-amber-300">Historial →</a></h2>
+          <h2 class="section-title">🏆 Clasificación real <a routerLink="/admin/scores" class="font-sans text-xs text-amber-300">Historial <mat-icon>arrow_forward</mat-icon></a></h2>
           @if (store.standings().length) { <app-leaderboard [rows]="store.standings()" /> }
           @if (store.lastUpdate()) { <p class="mt-2 text-xs text-slate-500">Última puntuación: {{ store.lastUpdate() | date: 'HH:mm:ss' }}</p> }
         </section>
 
         <section>
-          <h2 class="section-title">🎮 Modalidades
+          <h2 class="section-title"><mat-icon>stadia_controller</mat-icon> Modalidades
             <span class="font-sans text-xs text-slate-400">{{ d.challenges?.['pending'] ?? 0 }} pend. · {{ d.challenges?.['in_progress'] ?? 0 }} en curso · {{ d.challenges?.['finished'] ?? 0 }} fin.</span>
           </h2>
           <ul class="flex flex-col gap-2">
             @for (c of store.challenges(); track c.id) {
               <li>
                 <a [routerLink]="link(c.kind)" class="card-tight flex items-center gap-3 transition hover:bg-ink-700">
-                  <span class="text-2xl">{{ icons[c.kind] }}</span>
+                  <mat-icon class="icon-md text-slate-300">{{ icons[c.kind] }}</mat-icon>
                   <span class="flex-1 font-semibold">{{ c.name }}</span>
                   <app-status-badge [status]="c.status" />
                 </a>
@@ -70,17 +72,17 @@ interface DashboardData {
       </div>
 
       <section class="mt-6">
-        <h2 class="section-title">⚡ Accesos rápidos</h2>
+        <h2 class="section-title"><mat-icon>bolt</mat-icon> Accesos rápidos</h2>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <a routerLink="/admin/duels" [queryParams]="{ nuevo: 1 }" class="btn-primary">♟️ Nuevo duelo</a>
-          <a routerLink="/admin/missions" class="btn-secondary">🕵️ Validar misiones</a>
-          <a routerLink="/admin/modalities/spaghetti" class="btn-secondary">⏱️ Cronómetro</a>
-          <a routerLink="/admin/tv" class="btn-secondary">📺 Pantalla TV</a>
+          <a routerLink="/admin/duels" [queryParams]="{ nuevo: 1 }" class="btn-primary"><mat-icon>chess</mat-icon> Nuevo duelo</a>
+          <a routerLink="/admin/missions" class="btn-secondary"><mat-icon>mystery</mat-icon> Validar misiones</a>
+          <a routerLink="/admin/modalities/spaghetti" class="btn-secondary"><mat-icon>timer</mat-icon> Cronómetro</a>
+          <a routerLink="/admin/tv" class="btn-secondary"><mat-icon>tv</mat-icon> Pantalla TV</a>
         </div>
       </section>
 
       <section class="mt-6">
-        <h2 class="section-title">🧾 Últimos movimientos</h2>
+        <h2 class="section-title"><mat-icon>receipt_long</mat-icon> Últimos movimientos</h2>
         <ul class="flex flex-col gap-1.5">
           @for (e of d.recent_events; track e.id) {
             <li class="card-tight flex items-center gap-3 text-sm">
@@ -89,7 +91,7 @@ interface DashboardData {
               <span class="font-display text-xl" [class]="e.points > 0 ? 'text-emerald-300' : 'text-rose-300'">{{ e.points > 0 ? '+' : '' }}{{ e.points }}</span>
             </li>
           } @empty {
-            <app-empty icon="🧾" title="Aún no hay puntos" text="Los movimientos aparecerán aquí en cuanto registres resultados." />
+            <app-empty icon="receipt_long" title="Aún no hay puntos" text="Los movimientos aparecerán aquí en cuanto registres resultados." />
           }
         </ul>
       </section>

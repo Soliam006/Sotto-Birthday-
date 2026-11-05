@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
@@ -18,7 +19,7 @@ interface PlayerDetail {
 
 @Component({
   selector: 'app-admin-players',
-  imports: [FormsModule, DatePipe, Spinner, Empty, QrCodeView],
+  imports: [MatIcon, FormsModule, DatePipe, Spinner, Empty, QrCodeView],
   template: `
     <div class="mb-4 flex items-end justify-between gap-2">
       <h1 class="title-xl">Participantes</h1>
@@ -31,18 +32,21 @@ interface PlayerDetail {
         <option value="">Sin equipo</option>
         @for (t of store.teams(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
       </select>
-      <button class="btn-primary" type="submit" [disabled]="!newName().trim() || busy()">➕ Añadir</button>
+      <button class="btn-primary" type="submit" [disabled]="!newName().trim() || busy()"><mat-icon>add</mat-icon> Añadir</button>
     </form>
 
     <div class="mb-3 flex flex-wrap gap-2">
-      <input class="input min-w-0 flex-1" placeholder="🔍 Buscar…" [ngModel]="search()" (ngModelChange)="search.set($event)" name="search" />
+      <div class="relative min-w-0 flex-1">
+        <mat-icon class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</mat-icon>
+        <input class="input pl-10" placeholder="Buscar…" aria-label="Buscar participante" [ngModel]="search()" (ngModelChange)="search.set($event)" name="search" />
+      </div>
       <select class="input w-auto" [ngModel]="filterTeam()" (ngModelChange)="filterTeam.set($event)" name="filterTeam">
         <option value="">Todos</option>
         <option value="none">Sin equipo</option>
         @for (t of store.teams(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
       </select>
       @if (unassignedCount()) {
-        <button class="btn-secondary" (click)="autoAssign()">🎲 Repartir {{ unassignedCount() }} sin equipo</button>
+        <button class="btn-secondary" (click)="autoAssign()"><mat-icon>casino</mat-icon> Repartir {{ unassignedCount() }} sin equipo</button>
       }
     </div>
 
@@ -80,7 +84,7 @@ interface PlayerDetail {
                     } @else {
                       <p class="text-sm text-slate-400">○ Sin sesión activa</p>
                     }
-                    <button class="btn-secondary btn-sm mt-2" (click)="resetAccess(p)">🔄 Cerrar sesión y generar nuevo QR</button>
+                    <button class="btn-secondary btn-sm mt-2" (click)="resetAccess(p)"><mat-icon>refresh</mat-icon> Cerrar sesión y generar nuevo QR</button>
                   </div>
                   <div>
                     <p class="label">Misiones ({{ d.missions.length }})</p>
@@ -88,7 +92,7 @@ interface PlayerDetail {
                       <p class="text-sm"><span class="text-slate-400">{{ missionLabels[m.status] }} ·</span> {{ m.description }}</p>
                     } @empty { <p class="text-sm text-slate-500">Sin misiones asignadas</p> }
                   </div>
-                  <button class="btn-ghost btn-sm self-start text-rose-300" (click)="remove(p)">🗑️ Eliminar participante</button>
+                  <button class="btn-ghost btn-sm self-start text-rose-300" (click)="remove(p)"><mat-icon>delete</mat-icon> Eliminar participante</button>
                 </div>
                 <div class="flex flex-col items-center gap-2 rounded-xl bg-ink-900 p-3">
                   <p class="label">QR personal de acceso</p>
@@ -101,7 +105,7 @@ interface PlayerDetail {
             }
           </li>
         } @empty {
-          <app-empty icon="👥" title="No hay participantes" text="Añádelos aquí o comparte el QR de invitación (Configuración)." />
+          <app-empty icon="group" title="No hay participantes" text="Añádelos aquí o comparte el QR de invitación (Configuración)." />
         }
       </ul>
     }
@@ -156,7 +160,7 @@ export class AdminPlayers {
     }
     try {
       await this.sb.q(this.sb.client.from('players').update({ team_id: teamId || null }).eq('id', p.id).select('id'));
-      this.toast.success(`${p.name} → ${team?.name ?? 'sin equipo'}`);
+      this.toast.success(team ? `${p.name} pasa a ${team.name}` : `${p.name} queda sin equipo`);
       await this.store.loadPlayers();
     } catch (e) {
       this.toast.error(e);
