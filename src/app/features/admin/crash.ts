@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmService } from '../../core/confirm.service';
@@ -13,10 +14,11 @@ import { AllocationPreview } from './allocation-preview';
 import { ChallengeControls } from './challenge-controls';
 
 interface EntryRow { team: Team; player_id: string; raw_position: number | null }
+interface LineupMeta { team_id: string; version: number; updated_at: string; updated_by_player: string | null; updated_by_admin: boolean }
 
 @Component({
   selector: 'app-admin-crash',
-  imports: [MatIcon, FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, DatePipe, FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
   template: `
     <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400"><mat-icon>arrow_back</mat-icon> Modalidades</a>
     <app-challenge-controls kind="crash" />
@@ -51,6 +53,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
       @if (officialRaces().length) {
         <section class="card mb-4">
           <h2 class="section-title">2 · Alineaciones (orden de pilotos)</h2>
+          <p class="mb-1 text-xs text-slate-400">Los propios jugadores pueden ordenar a su equipo desde su móvil; aquí lo ves en directo y puedes corregirlo.</p>
           <p class="mb-3 text-xs text-slate-400">Cada equipo presenta {{ officialRaces().length }} pilotos: el piloto N corre la carrera N.</p>
           <div class="grid gap-3 md:grid-cols-2">
             @for (t of activeTeams(); track t.id) {
@@ -58,11 +61,15 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
                 <p class="mb-2 flex items-center gap-2 font-semibold"><span class="size-3 rounded-full" [style.background]="t.color"></span>{{ t.name }}
                   @if (lineupComplete(t.id)) { <span class="chip ml-auto bg-emerald-500/15 text-emerald-300"><mat-icon>check</mat-icon> Completa</span> }
                 </p>
+                @if (metaOf(t.id); as meta) {
+                  <p class="-mt-1 mb-2 text-[11px] text-slate-500">Guardada por {{ meta.updated_by_admin ? 'el juez' : (store.playerById().get(meta.updated_by_player ?? '')?.name ?? 'un jugador') }} · {{ meta.updated_at | date: 'HH:mm' }}</p>
+                }
+                @if (dirtyTeams().has(t.id)) { <p class="-mt-1 mb-2 text-[11px] text-amber-300">Cambios sin guardar</p> }
                 @for (r of officialRaces(); track r.id; let i = $index) {
                   <div class="mb-1.5 flex items-center gap-2">
                     <span class="w-6 text-sm text-slate-400">{{ i + 1 }}.</span>
                     <select class="input min-h-9 py-1.5 text-sm" [ngModel]="draftLineup()[t.id]?.[i] ?? ''"
-                            (ngModelChange)="setLineup(t.id, i, $event)" [name]="'l-' + t.id + '-' + i" [disabled]="r.status === 'finished'">
+                            (ngModelChange)="setLineup(t.id, i, $event)" [name]="'l-' + t.id + '-' + i" [disabled]="r.status === 'finished' || r.status === 'in_progress'">
                       <option value="">— Piloto —</option>
                       @for (p of membersOf(t.id); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
                     </select>
@@ -166,6 +173,9 @@ export class AdminCrash implements OnInit {
   protected readonly results = signal<CrashResult[]>([]);
   protected readonly trackNames = signal<string[]>(['', '', '', '']);
   protected readonly draftLineup = signal<Record<string, string[]>>({});
+  /** Equipos con cambios del juez sin guardar: no se sobrescriben al llegar datos nuevos */
+  protected readonly dirtyTeams = signal<ReadonlySet<string>>(new Set());
+  protected readonly lineupMeta = signal<LineupMeta[]>([]);
   protected readonly openRace = signal<string | null>(null);
   protected readonly entries = signal<EntryRow[]>([]);
   protected readonly preview = signal<AllocationRow[] | null>(null);
@@ -187,19 +197,21 @@ export class AdminCrash implements OnInit {
 
   async load(initial: boolean): Promise<void> {
     try {
-      const [races, lineups, results] = await Promise.all([
+      const [races, lineups, results, meta] = await Promise.all([
         this.sb.q<CrashRace[]>(this.sb.client.from('crash_races').select('*').order('race_number')),
         this.sb.q<CrashLineup[]>(this.sb.client.from('crash_lineups').select('*').order('slot')),
         this.sb.q<CrashResult[]>(this.sb.client.from('crash_race_results').select('*').order('human_position')),
+        this.sb.q<LineupMeta[]>(this.sb.client.from('crash_lineup_meta').select('*')),
       ]);
+      this.lineupMeta.set(meta);
       this.races.set(races);
       this.lineups.set(lineups);
       this.results.set(results);
       if (initial) {
         const official = races.filter((r) => !r.is_training);
         if (official.length) this.trackNames.set(official.map((r) => r.track));
-        this.resetDraftLineup();
       }
+      this.resetDraftLineup();
     } catch (e) {
       this.toast.error(e);
     } finally {
@@ -207,10 +219,20 @@ export class AdminCrash implements OnInit {
     }
   }
 
+  /** Adopta la alineación del servidor en los equipos que el juez no está editando */
   private resetDraftLineup(): void {
-    const draft: Record<string, string[]> = {};
-    for (const l of this.lineups()) (draft[l.team_id] ??= [])[l.slot - 1] = l.player_id;
-    this.draftLineup.set(draft);
+    const server: Record<string, string[]> = {};
+    for (const l of this.lineups()) (server[l.team_id] ??= [])[l.slot - 1] = l.player_id;
+    const dirty = this.dirtyTeams();
+    this.draftLineup.update((d) => {
+      const next: Record<string, string[]> = { ...server };
+      for (const teamId of dirty) if (d[teamId]) next[teamId] = d[teamId];
+      return next;
+    });
+  }
+
+  metaOf(teamId: string): LineupMeta | undefined {
+    return this.lineupMeta().find((m) => m.team_id === teamId && m.version > 0);
   }
 
   isTraining(raceId: string): boolean {
@@ -250,6 +272,7 @@ export class AdminCrash implements OnInit {
       arr[i] = playerId;
       return { ...d, [teamId]: arr };
     });
+    this.dirtyTeams.update((s) => new Set(s).add(teamId));
   }
 
   async saveLineup(t: Team): Promise<void> {
@@ -261,6 +284,7 @@ export class AdminCrash implements OnInit {
     try {
       await this.sb.rpc('admin_crash_set_lineup', { p_team_id: t.id, p_player_ids: ids });
       this.toast.success(`Alineación de ${t.name} guardada`);
+      this.dirtyTeams.update((s) => { const n = new Set(s); n.delete(t.id); return n; });
       await this.load(false);
     } catch (e) {
       this.toast.error(e);

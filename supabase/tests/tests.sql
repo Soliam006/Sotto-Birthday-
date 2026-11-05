@@ -363,4 +363,40 @@ set role anon;
 select pg_temp.expect_error(format($$select public.get_tv_state(%L)$$, :'tvkey'), 'Clave de pantalla');
 reset role;
 
+-- 12. Alineación de Crash editada por los jugadores ---------------------------
+-- (la carrera 1 ya está disputada: su piloto queda bloqueado)
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001'); -- Ana (Rojo)
+select pg_temp.assert((public.get_player_modalities() -> 'crash' ->> 'lineup_version')::int = 1, 'versión inicial 1 (la fijó el juez)');
+select pg_temp.assert((public.get_player_modalities() -> 'crash' ->> 'lineup_updated_by') = 'el juez', 'autor: el juez');
+select pg_temp.assert((public.get_player_modalities() -> 'crash' ->> 'can_edit_lineup')::boolean, 'Ana puede editar');
+select pg_temp.assert((public.player_crash_set_lineup(array[:'ana', :'bruno']::uuid[], 1) ->> 'version')::int = 2, 'Ana guarda: versión 2');
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L, %L]::uuid[], 2)$$, :'bruno', :'ana'), 'en pista o ya disputada');
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L]::uuid[], 2)$$, :'ana'), 'exactamente 2');
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L, %L]::uuid[], 2)$$, :'ana', :'carla'), 'pertenecer al equipo');
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L, %L]::uuid[], 2)$$, :'ana', :'ana'), 'distinto');
+reset role;
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000002'); -- Bruno (Rojo) con una versión antigua
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L, %L]::uuid[], 1)$$, :'ana', :'bruno'), 'compañero acaba de guardar');
+select pg_temp.assert((public.get_player_modalities() -> 'crash' ->> 'lineup_updated_by') = 'Ana', 'autor: Ana');
+select pg_temp.assert((public.player_crash_set_lineup(array[:'ana', :'bruno']::uuid[], 2) ->> 'version')::int = 3, 'Bruno guarda: versión 3');
+-- Solo ve la alineación de su equipo
+select pg_temp.assert(jsonb_array_length(public.get_player_modalities() -> 'crash' -> 'lineup') = 2, 'solo su equipo');
+select pg_temp.assert((select count(*) from public.crash_lineup_meta) = 1, 'meta: solo la de su equipo');
+reset role;
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000009'); -- sin vincular
+select pg_temp.expect_error(format($$select public.player_crash_set_lineup(array[%L, %L]::uuid[], 0)$$, :'ana', :'bruno'), 'unirte');
+reset role;
+
+-- El juez puede fijarla sin versión y prevalece
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select public.admin_crash_set_lineup(:'red', array[:'ana', :'bruno']::uuid[]);
+select pg_temp.assert((select version from public.crash_lineup_meta where team_id = :'red') = 4, 'juez: versión 4');
+reset role;
+
 select 'TODAS LAS PRUEBAS SUPERADAS' as resultado;

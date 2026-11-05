@@ -1,30 +1,44 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, Injector, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { CHALLENGE_ICONS, Challenge } from '../../core/models';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CHALLENGE_ICONS, Challenge, ChallengeKind } from '../../core/models';
 import { SupabaseService } from '../../core/supabase.service';
 import { Countdown } from '../../shared/countdown';
 import { ErrorBox, Spinner, StatusBadge } from '../../shared/ui';
+import { CrashLineupEditor } from './crash-lineup-editor';
 import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-modalities',
-  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown],
+  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown, CrashLineupEditor],
   template: `
-    <h1 class="title-lg mb-4">Modalidades</h1>
+    <h1 class="title-lg mb-1">Modalidades</h1>
+    <p class="mb-4 text-sm text-slate-400">Pulsa una modalidad para ver sus reglas y la información para participar.</p>
     @if (store.modalities(); as m) {
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3">
         @for (c of m.challenges; track c.id; let i = $index) {
           <article [id]="c.kind" class="card animate-rise scroll-mt-20 overflow-hidden p-0" [style.animation-delay.ms]="i * 60">
-            <header class="flex items-start gap-3 border-b border-white/5 bg-gradient-to-r from-white/5 to-transparent p-4">
-              <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-ink-700 text-amber-300"><mat-icon class="icon-md">{{ icons[c.kind] }}</mat-icon></span>
-              <div class="min-w-0 flex-1">
-                <p class="text-[11px] uppercase tracking-widest text-slate-400">{{ c.tagline }}</p>
-                <h2 class="font-display text-2xl leading-tight">{{ c.name }}</h2>
-              </div>
-              <app-status-badge [status]="c.status" />
-            </header>
-            <div class="flex flex-col gap-3 p-4">
+            @let open = isOpen(c.kind);
+            <button type="button" (click)="toggle(c.kind)" [attr.aria-expanded]="open" [attr.aria-controls]="'body-' + c.kind"
+                    class="flex w-full items-center gap-3 bg-gradient-to-r from-white/5 to-transparent px-3 py-3 text-left transition active:bg-white/5"
+                    [class.border-b]="open" [class.border-white/5]="open">
+              <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-ink-700 text-amber-300"><mat-icon class="icon-md">{{ icons[c.kind] }}</mat-icon></span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-[11px] uppercase tracking-widest text-slate-400">{{ c.tagline }}</span>
+                <span class="font-display block truncate text-2xl leading-tight" [title]="c.name">{{ c.name }}</span>
+                @if (c.kind === 'crash' && lineupMissing()) {
+                  <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">format_list_numbered</mat-icon> Falta el orden de pilotos</span>
+                } @else if (c.kind === 'crash' && m.crash.my_slots.length) {
+                  <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">sports_score</mat-icon> Corres en la {{ m.crash.my_slots.join(' y ') }}</span>
+                }
+              </span>
+              <span class="flex shrink-0 items-center gap-1">
+                <app-status-badge [status]="c.status" />
+                <mat-icon class="text-slate-400 transition-transform duration-200" [class.rotate-180]="open">expand_more</mat-icon>
+              </span>
+            </button>
+            @if (open) {
+            <div [id]="'body-' + c.kind" class="animate-rise flex flex-col gap-3 p-4">
               <p class="text-sm text-slate-300">{{ c.description }}</p>
 
               @switch (c.kind) {
@@ -34,11 +48,17 @@ import { PlayerStore } from './player-store';
                       <mat-icon>sports_score</mat-icon> Corres en la carrera <b>{{ m.crash.my_slots.join(' y ') }}</b>. ¡Prepárate!
                     </p>
                   }
+                  @if (m.crash.race_count > 0 && store.team()) {
+                    <app-crash-lineup-editor [crash]="m.crash" [members]="store.team()!.members" [me]="store.state()?.player?.id"
+                                             (reload)="store.loadModalities()" />
+                  } @else if (!m.crash.race_count) {
+                    <p class="rounded-xl bg-ink-800 p-3 text-sm text-slate-400">El juez aún no ha fijado el número de carreras. Cuando lo haga, podréis ordenar vuestros pilotos aquí.</p>
+                  }
                   @if (m.crash.races.length) {
                     <ul class="grid gap-1.5 text-sm">
                       @for (r of m.crash.races; track r.race_number) {
                         <li class="flex items-center justify-between rounded-lg bg-ink-800 px-3 py-2">
-                          <span>@if (r.is_training) { <mat-icon class="text-sky-300">science</mat-icon> Entrenamiento } @else { Carrera {{ r.race_number }} } · <span class="text-slate-400">{{ r.track }}</span></span>
+                          <span>@if (r.is_training) { <mat-icon class="text-sky-300">science</mat-icon> Entrenamiento } @else { Carrera {{ r.race_number }}@if (r.track) { · <span class="text-slate-400">{{ r.track }}</span> } }</span>
                           <span class="text-xs" [class]="r.status === 'finished' ? 'text-amber-300' : r.status === 'in_progress' ? 'text-emerald-300' : 'text-slate-500'">
                             {{ r.status === 'finished' ? 'Terminada' : r.status === 'in_progress' ? 'En pista' : 'Pendiente' }}
                           </span>
@@ -93,6 +113,7 @@ import { PlayerStore } from './player-store';
                 <p class="mt-2 whitespace-pre-line text-sm text-slate-300">{{ c.rules }}</p>
               </details>
             </div>
+            }
           </article>
         }
       </div>
@@ -103,11 +124,41 @@ import { PlayerStore } from './player-store';
     }
   `,
 })
-export class PlayerModalitiesPage {
+export class PlayerModalitiesPage implements OnInit {
   protected readonly store = inject(PlayerStore);
   private readonly sb = inject(SupabaseService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly injector = inject(Injector);
   protected readonly icons = CHALLENGE_ICONS;
-  protected readonly loaded = computed(() => !!this.store.modalities());
+
+  /** Modalidades desplegadas (todas plegadas por defecto) */
+  private readonly opened = signal<ReadonlySet<ChallengeKind>>(new Set());
+  /** El equipo aún no ha completado el orden de pilotos de Crash */
+  protected readonly lineupMissing = computed(() => {
+    const c = this.store.modalities()?.crash;
+    return !!c && c.can_edit_lineup && !!this.store.team() && c.lineup.length < c.race_count;
+  });
+
+  ngOnInit(): void {
+    // Enlace desde Inicio (/player/modalities#crash): se abre y se desplaza a esa modalidad
+    const kind = this.route.snapshot.fragment as ChallengeKind | null;
+    if (kind && kind in CHALLENGE_ICONS) {
+      this.opened.set(new Set([kind]));
+      afterNextRender(() => document.getElementById(kind)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), { injector: this.injector });
+    }
+  }
+
+  isOpen(kind: ChallengeKind): boolean {
+    return this.opened().has(kind);
+  }
+  toggle(kind: ChallengeKind): void {
+    this.opened.update((s) => {
+      const n = new Set(s);
+      if (n.has(kind)) n.delete(kind);
+      else n.add(kind);
+      return n;
+    });
+  }
 
   cfg(c: Challenge, key: string): string {
     const v = c.config[key];
