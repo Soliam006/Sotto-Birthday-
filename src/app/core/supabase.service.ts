@@ -2,8 +2,15 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 
-/** Error con mensaje listo para mostrar al usuario (en español). */
-export class AppError extends Error {}
+/** Error con mensaje listo para mostrar al usuario (en español) y su código SQLSTATE/PostgREST. */
+export class AppError extends Error {
+  constructor(message: string, readonly code?: string) {
+    super(message);
+  }
+}
+
+/** Código de conflicto de versión (otro usuario guardó antes) */
+export const CONFLICT_CODE = 'BC409';
 
 const FRIENDLY: [RegExp, string][] = [
   [/permission denied|42501|row-level security/i, 'No tienes permiso para realizar esta acción.'],
@@ -17,8 +24,8 @@ const FRIENDLY: [RegExp, string][] = [
 export function toFriendlyMessage(err: unknown): string {
   const e = err as { message?: string; code?: string; details?: string } | null;
   const msg = e?.message ?? String(err ?? 'Error desconocido');
-  // Errores de negocio lanzados por nuestras funciones (P0001) ya vienen en español
-  if (e?.code === 'P0001') return msg;
+  // Errores de negocio lanzados por nuestras funciones (P0001, BCxxx) ya vienen en español
+  if (e?.code === 'P0001' || e?.code?.startsWith('BC')) return msg;
   for (const [re, friendly] of FRIENDLY) {
     if (re.test(msg) || re.test(e?.code ?? '') || re.test(e?.details ?? '')) {
       if (e?.code === '42501' && /juez|pantalla/i.test(msg)) return msg;
@@ -44,7 +51,7 @@ export class SupabaseService {
   /** Llama a una función RPC y lanza AppError con mensaje legible si falla. */
   async rpc<T = unknown>(fn: string, args?: Record<string, unknown>): Promise<T> {
     const { data, error } = await this.client.rpc(fn, args ?? {});
-    if (error) throw new AppError(toFriendlyMessage(error));
+    if (error) throw new AppError(toFriendlyMessage(error), error.code);
     return data as T;
   }
 

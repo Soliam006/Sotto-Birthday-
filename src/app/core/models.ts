@@ -194,7 +194,21 @@ export interface MyState {
 
 export interface PlayerModalities {
   challenges: Challenge[];
-  crash: { races: Pick<CrashRace, 'race_number' | 'track' | 'is_training' | 'status'>[]; my_slots: number[] };
+  crash: {
+    races: Pick<CrashRace, 'race_number' | 'track' | 'is_training' | 'status'>[];
+    my_slots: number[];
+    race_count: number;
+    /** El jugador puede ordenar los pilotos de su equipo */
+    can_edit_lineup: boolean;
+    /** Alineación guardada del equipo del jugador */
+    lineup: { slot: number; player_id: string }[];
+    /** Versión para la concurrencia optimista (0 = nunca guardada) */
+    lineup_version: number;
+    lineup_updated_at: string | null;
+    lineup_updated_by_id: string | null;
+    /** Nombre de quien guardó por última vez, o «el juez» */
+    lineup_updated_by: string | null;
+  };
   duels: { games: string[]; my_count: number; limit: number };
   spaghetti: {
     timer_status: TimerStatus;

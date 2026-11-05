@@ -57,6 +57,10 @@ export class PlayerStore {
       const t0 = Date.now();
       const m = await this.sb.rpc<PlayerModalities>('get_player_modalities');
       syncServerClock(m.server_now, t0);
+      const prev = this.modalities();
+      if (prev && m.crash.lineup_version > prev.crash.lineup_version && m.crash.lineup_updated_by_id !== this.state()?.player?.id) {
+        this.toast.info(`${m.crash.lineup_updated_by ?? 'Alguien'} ha guardado el orden de pilotos de Crash`);
+      }
       this.modalities.set(m);
     } catch (e) {
       this.error.set((e as Error).message);

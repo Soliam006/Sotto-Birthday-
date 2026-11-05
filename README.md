@@ -127,7 +127,7 @@ variables de entorno o de `.env`. Sin credenciales, la app muestra la pantalla `
 
 | Tema | Decisión |
 |---|---|
-| Crash | El juez introduce la posición real (con bots) de cada piloto; el servidor calcula el orden entre humanos. 20/15/10/5. Carrera 0 = entrenamiento sin puntos. Cada equipo presenta tantos pilotos distintos como carreras (si un equipo tiene menos integrantes que carreras, se permite repetir). No se puede finalizar con carreras pendientes. |
+| Crash | El juez introduce la posición real (con bots) de cada piloto; el servidor calcula el orden entre humanos. 20/15/10/5. Carrera 0 = entrenamiento sin puntos. Cada equipo presenta tantos pilotos distintos como carreras (si un equipo tiene menos integrantes que carreras, se permite repetir). **El orden lo deciden los propios jugadores** en *Modalidades → Crash*: lo cambian en su móvil y se envía al pulsar «Guardar»; si un compañero guardó antes, se rechaza y se muestra el orden nuevo (no se pisan cambios). El juez ve quién lo guardó y puede corregirlo. Las carreras en pista o disputadas quedan bloqueadas. No se puede finalizar con carreras pendientes. |
 | Overcooked | Puntuación oficial por equipo → ranking automático con empates (1,1,3). 40/30/20/10. El juez confirma antes de sumar. |
 | Spaghetti | 30 min por defecto (configurable). Imagen en Storage, visible solo cuando el juez la muestra. 50/35/20/10. |
 | Duelos | 1v1: equipos distintos, ganador +15. Multi: ≥3 jugadores de ≥2 equipos, 15/8/0. Límite 3 duelos puntuables por jugador (cancelados no cuentan). **Empate en 1v1: ambos reciben los puntos de 1º (regla literal «los empates reciben la puntuación de su posición»)** — ajustable si prefieres otra cosa. |
