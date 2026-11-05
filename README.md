@@ -89,6 +89,13 @@ npm run build               # dist/birthday-cup/browser
 npm run test:db             # pruebas SQL contra un PostgreSQL local (requiere superusuario)
 ```
 
+### Iconos
+Los iconos son `<mat-icon>` de Angular Material con la fuente **Material Symbols Rounded**. Para que
+la fuente pese poco (~17 KB) solo se descargan los iconos usados, listados en `icon_names=` dentro de
+`src/index.html` (orden alfabético). Si usas un icono nuevo, añádelo a esa lista:
+`npm run icons:check` (se ejecuta también antes de cada build) avisa si falta alguno. Se mantienen
+como emoji la copa 🏆, la corona 👑 y las medallas 🥇🥈🥉.
+
 `scripts/set-env.mjs` genera `src/environments/environment.ts` (ignorado por git) a partir de
 variables de entorno o de `.env`. Sin credenciales, la app muestra la pantalla `/setup`.
 

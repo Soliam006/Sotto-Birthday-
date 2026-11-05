@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { CHALLENGE_ICONS } from '../../core/models';
 import { Leaderboard } from '../../shared/leaderboard';
@@ -8,7 +9,7 @@ import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-home',
-  imports: [RouterLink, Leaderboard, Spinner, ErrorBox, StatusBadge, HiddenScores],
+  imports: [MatIcon, RouterLink, Leaderboard, Spinner, ErrorBox, StatusBadge, HiddenScores],
   template: `
     @if (store.state(); as s) {
       <section class="animate-rise relative mb-5 overflow-hidden rounded-3xl border border-white/10 p-5"
@@ -27,10 +28,10 @@ import { PlayerStore } from './player-store';
             Con: {{ teammates().join(', ') || 'aún no hay compañeros' }}
           </p>
         } @else {
-          <p class="mt-4 rounded-xl bg-white/5 p-3 text-sm text-slate-300">⏳ El juez aún no te ha asignado equipo. ¡Enseguida!</p>
+          <p class="mt-4 rounded-xl bg-white/5 p-3 text-sm text-slate-300"><mat-icon>hourglass_top</mat-icon> El juez aún no te ha asignado equipo. ¡Enseguida!</p>
         }
         <div class="mt-4 flex items-center gap-2 text-xs">
-          <span class="chip" [class]="statusChip()">{{ statusLabel() }}</span>
+          <span class="chip" [class]="statusChip()"><mat-icon class="icon-sm">{{ statusIcon() }}</mat-icon>{{ statusLabel() }}</span>
         </div>
       </section>
 
@@ -44,12 +45,12 @@ import { PlayerStore } from './player-store';
       </section>
 
       <section class="mb-6">
-        <h2 class="section-title">🎮 Modalidades <a routerLink="/player/modalities" class="text-xs font-sans text-amber-300">Ver todas →</a></h2>
+        <h2 class="section-title"><mat-icon>stadia_controller</mat-icon> Modalidades <a routerLink="/player/modalities" class="text-xs font-sans text-amber-300">Ver todas <mat-icon>arrow_forward</mat-icon></a></h2>
         @if (store.modalities(); as m) {
           <div class="grid grid-cols-2 gap-2">
             @for (c of m.challenges; track c.id) {
               <a [routerLink]="['/player/modalities']" [fragment]="c.kind" class="card-tight flex flex-col gap-2 transition active:scale-[0.98]">
-                <span class="text-2xl">{{ icons[c.kind] }}</span>
+                <mat-icon class="icon-lg text-amber-300">{{ icons[c.kind] }}</mat-icon>
                 <span class="text-sm font-semibold leading-tight">{{ c.name }}</span>
                 <app-status-badge [status]="c.status" />
               </a>
@@ -73,7 +74,11 @@ export class PlayerHome {
   });
   protected readonly statusLabel = computed(() => {
     const st = this.store.state()?.competition?.status;
-    return st === 'finished' ? '🏁 Competición finalizada' : st === 'running' ? '🔥 Competición en marcha' : '⏳ La competición empezará pronto';
+    return st === 'finished' ? 'Competición finalizada' : st === 'running' ? 'Competición en marcha' : 'La competición empezará pronto';
+  });
+  protected readonly statusIcon = computed(() => {
+    const st = this.store.state()?.competition?.status;
+    return st === 'finished' ? 'sports_score' : st === 'running' ? 'local_fire_department' : 'hourglass_top';
   });
   protected readonly statusChip = computed(() => {
     const st = this.store.state()?.competition?.status;

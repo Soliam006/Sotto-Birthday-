@@ -237,10 +237,11 @@ export const MISSION_STATUS_LABELS: Record<MissionStatus, string> = {
   discovered: 'Descubierta',
 };
 
+/** Nombre del icono Material Symbols de cada modalidad (<mat-icon>) */
 export const CHALLENGE_ICONS: Record<ChallengeKind, string> = {
-  crash: '🏎️',
-  overcooked: '🍳',
-  duels: '♟️',
-  missions: '🕵️',
-  spaghetti: '🍝',
+  crash: 'sports_motorsports',
+  overcooked: 'skillet',
+  duels: 'chess',
+  missions: 'mystery',
+  spaghetti: 'architecture',
 };

@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { ErrorBox, Spinner } from '../../shared/ui';
 import { HiddenScores } from './hidden-scores';
 import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-team',
-  imports: [Spinner, ErrorBox, HiddenScores],
+  imports: [MatIcon, Spinner, ErrorBox, HiddenScores],
   template: `
     @if (store.state(); as s) {
       @if (s.team; as t) {
@@ -13,7 +14,7 @@ import { PlayerStore } from './player-store';
                  [style.border-color]="t.color + '66'"
                  [style.background]="'radial-gradient(circle at 50% 0%, ' + t.color + '44, #0d0f17 70%)'">
           <div class="mx-auto mb-3 grid size-20 place-items-center rounded-3xl text-4xl"
-               [style.background]="t.color" [style.box-shadow]="'0 0 40px ' + t.color">🛡️</div>
+               [style.background]="t.color" [style.box-shadow]="'0 0 40px ' + t.color"><mat-icon>shield</mat-icon></div>
           <h1 class="font-display text-5xl leading-none" [style.color]="t.color">{{ t.name }}</h1>
           <p class="mt-1 text-sm text-slate-400">{{ t.members.length }} integrantes</p>
           @if (myRow(); as r) {
@@ -24,7 +25,7 @@ import { PlayerStore } from './player-store';
           }
         </section>
 
-        <h2 class="section-title">👥 Integrantes</h2>
+        <h2 class="section-title"><mat-icon>group</mat-icon> Integrantes</h2>
         <ul class="mb-6 grid grid-cols-2 gap-2">
           @for (m of t.members; track m.id) {
             <li class="card-tight flex items-center gap-2" [class.ring-2]="m.id === s.player?.id" [style.--tw-ring-color]="t.color">
@@ -37,7 +38,7 @@ import { PlayerStore } from './player-store';
         <p class="mt-4 text-center text-xs text-slate-500">Todos los puntos que consigas (duelos, carreras, misiones…) suman para tu equipo.</p>
       } @else {
         <div class="card text-center">
-          <p class="text-4xl">⏳</p>
+          <p class="text-4xl"><mat-icon>hourglass_top</mat-icon></p>
           <p class="mt-2 font-semibold">Aún no tienes equipo</p>
           <p class="text-sm text-slate-400">El juez te asignará uno en breve.</p>
         </div>

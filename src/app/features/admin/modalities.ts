@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CHALLENGE_ICONS, Challenge } from '../../core/models';
@@ -9,7 +10,7 @@ import { ChallengeControls } from './challenge-controls';
 
 @Component({
   selector: 'app-admin-modalities',
-  imports: [RouterLink, FormsModule, ChallengeControls],
+  imports: [MatIcon, RouterLink, FormsModule, ChallengeControls],
   template: `
     <h1 class="title-xl mb-4">Modalidades</h1>
     <div class="flex flex-col gap-4">
@@ -18,8 +19,8 @@ import { ChallengeControls } from './challenge-controls';
           <app-challenge-controls [kind]="c.kind" />
           <p class="mb-3 text-sm text-slate-300">{{ c.description }}</p>
           <div class="flex flex-wrap gap-2">
-            <a class="btn-primary btn-sm" [routerLink]="link(c)">{{ icons[c.kind] }} Gestionar</a>
-            <button class="btn-secondary btn-sm" (click)="toggleEdit(c)">✏️ Textos y puntos</button>
+            <a class="btn-primary btn-sm" [routerLink]="link(c)"><mat-icon>{{ icons[c.kind] }}</mat-icon> Gestionar</a>
+            <button class="btn-secondary btn-sm" (click)="toggleEdit(c)"><mat-icon>edit</mat-icon> Textos y puntos</button>
           </div>
 
           @if (editing() === c.id) {

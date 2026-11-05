@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
@@ -23,14 +24,14 @@ const IDEAS = [
 
 @Component({
   selector: 'app-admin-missions',
-  imports: [FormsModule, DatePipe, Spinner, Empty, ChallengeControls],
+  imports: [MatIcon, FormsModule, DatePipe, Spinner, Empty, ChallengeControls],
   template: `
     <app-challenge-controls kind="missions" />
 
     @if (loading()) { <app-spinner /> } @else {
       <!-- Pendientes -->
       <section class="mb-6">
-        <h2 class="section-title">⏳ Pendientes de validar ({{ claimed().length }})</h2>
+        <h2 class="section-title"><mat-icon>hourglass_top</mat-icon> Pendientes de validar ({{ claimed().length }})</h2>
         <div class="flex flex-col gap-3">
           @for (m of claimed(); track m.id) {
             <article class="card border-amber-400/30">
@@ -40,10 +41,10 @@ const IDEAS = [
                 <span class="ml-auto font-display text-xl text-amber-300">+{{ m.reward }}</span>
               </div>
               <p class="font-medium">{{ m.description }}</p>
-              <p class="mt-2 rounded-lg bg-white/5 p-2 text-sm text-slate-300">💬 {{ m.claim_note }}</p>
+              <p class="mt-2 rounded-lg bg-white/5 p-2 text-sm text-slate-300"><mat-icon>chat_bubble</mat-icon> {{ m.claim_note }}</p>
               <div class="mt-3 grid grid-cols-2 gap-2">
-                <button class="btn-danger" (click)="review(m, false)">✖ Rechazar</button>
-                <button class="btn-success" (click)="review(m, true)">✔ Validar</button>
+                <button class="btn-danger" (click)="review(m, false)"><mat-icon>close</mat-icon> Rechazar</button>
+                <button class="btn-success" (click)="review(m, true)"><mat-icon>check</mat-icon> Validar</button>
               </div>
             </article>
           } @empty { <p class="text-sm text-slate-500">No hay misiones pendientes.</p> }
@@ -51,13 +52,13 @@ const IDEAS = [
       </section>
 
       <section class="mb-6">
-        <h2 class="section-title">🎯 Acusaciones pendientes ({{ pendingDiscoveries().length }})</h2>
+        <h2 class="section-title"><mat-icon>target</mat-icon> Acusaciones pendientes ({{ pendingDiscoveries().length }})</h2>
         <div class="flex flex-col gap-3">
           @for (d of pendingDiscoveries(); track d.id) {
             <article class="card border-violet-400/30">
               <p class="text-sm"><b>{{ playerName(d.accuser_player_id) }}</b> <span class="text-slate-400">({{ store.teamOf(d.accuser_player_id)?.name }})</span> acusa a
                 <b>{{ playerName(d.accused_player_id) }}</b> <span class="text-slate-400">({{ store.teamOf(d.accused_player_id)?.name }})</span></p>
-              <p class="mt-2 rounded-lg bg-white/5 p-2 text-sm">🗣️ «{{ d.guess }}»</p>
+              <p class="mt-2 rounded-lg bg-white/5 p-2 text-sm"><mat-icon>record_voice_over</mat-icon> «{{ d.guess }}»</p>
               <p class="label mt-3">Misiones de {{ playerName(d.accused_player_id) }}</p>
               <div class="flex flex-col gap-1.5">
                 @for (m of missionsOf(d.accused_player_id); track m.id) {
@@ -69,8 +70,8 @@ const IDEAS = [
                 } @empty { <p class="text-sm text-slate-500">No tiene misiones asignadas.</p> }
               </div>
               <div class="mt-3 grid grid-cols-2 gap-2">
-                <button class="btn-secondary" (click)="resolve(d, false)">❌ Incorrecta</button>
-                <button class="btn-success" [disabled]="!discoveryPick()[d.id]" (click)="resolve(d, true)">🎯 ¡Acierto! +5</button>
+                <button class="btn-secondary" (click)="resolve(d, false)"><mat-icon>cancel</mat-icon> Incorrecta</button>
+                <button class="btn-success" [disabled]="!discoveryPick()[d.id]" (click)="resolve(d, true)"><mat-icon>target</mat-icon> ¡Acierto! +5</button>
               </div>
             </article>
           } @empty { <p class="text-sm text-slate-500">No hay acusaciones pendientes.</p> }
@@ -79,7 +80,7 @@ const IDEAS = [
 
       <!-- Crear -->
       <section class="card mb-6">
-        <h2 class="section-title">➕ Asignar misión</h2>
+        <h2 class="section-title"><mat-icon>add</mat-icon> Asignar misión</h2>
         <form class="grid gap-3" (ngSubmit)="create()">
           <select class="input" name="player" [(ngModel)]="newPlayer">
             <option value="">Selecciona un jugador…</option>
@@ -89,7 +90,7 @@ const IDEAS = [
           </select>
           <textarea class="input min-h-20" name="desc" [(ngModel)]="newDesc" maxlength="500" placeholder="Descripción de la misión secreta"></textarea>
           <div class="flex flex-wrap gap-1.5">
-            @for (i of ideas; track i) { <button type="button" class="chip bg-white/5 text-slate-300 hover:bg-white/10" (click)="newDesc.set(i)">💡 {{ i }}</button> }
+            @for (i of ideas; track i) { <button type="button" class="chip bg-white/5 text-slate-300 hover:bg-white/10" (click)="newDesc.set(i)"><mat-icon>lightbulb</mat-icon> {{ i }}</button> }
           </div>
           <div class="flex items-center gap-2">
             <label class="label mb-0" for="reward">Recompensa</label>
@@ -101,8 +102,9 @@ const IDEAS = [
 
       <!-- Todas -->
       <section class="mb-6">
-        <h2 class="section-title">📋 Todas las misiones ({{ missions().length }})
-          <button class="btn-secondary btn-sm font-sans" (click)="toggleReveal()">{{ store.settings()?.missions_revealed ? '🙈 Ocultar a jugadores' : '📢 Revelar a todos' }}</button>
+        <h2 class="section-title"><mat-icon>list_alt</mat-icon> Todas las misiones ({{ missions().length }})
+          <button class="btn-secondary btn-sm font-sans" (click)="toggleReveal()"><mat-icon>{{ store.settings()?.missions_revealed ? 'visibility_off' : 'campaign' }}</mat-icon>
+            {{ store.settings()?.missions_revealed ? 'Ocultar a jugadores' : 'Revelar a todos' }}</button>
         </h2>
         <div class="flex flex-col gap-2">
           @for (m of missions(); track m.id) {
@@ -123,21 +125,21 @@ const IDEAS = [
                 <p class="mt-1">{{ m.description }} <span class="text-amber-300">+{{ m.reward }}</span></p>
                 @if (m.status !== 'validated' && m.status !== 'discovered') {
                   <div class="mt-1 flex gap-1">
-                    <button class="btn-ghost btn-sm" (click)="startEdit(m)">✏️ Editar</button>
-                    <button class="btn-ghost btn-sm text-rose-300" (click)="remove(m)">🗑️ Eliminar</button>
+                    <button class="btn-ghost btn-sm" (click)="startEdit(m)"><mat-icon>edit</mat-icon> Editar</button>
+                    <button class="btn-ghost btn-sm text-rose-300" (click)="remove(m)"><mat-icon>delete</mat-icon> Eliminar</button>
                   </div>
                 }
               }
             </article>
-          } @empty { <app-empty icon="🕵️" title="Sin misiones" text="Asigna misiones secretas a los jugadores." /> }
+          } @empty { <app-empty icon="mystery" title="Sin misiones" text="Asigna misiones secretas a los jugadores." /> }
         </div>
       </section>
 
       @if (resolvedDiscoveries().length) {
         <section>
-          <h2 class="section-title">🗂️ Acusaciones resueltas</h2>
+          <h2 class="section-title"><mat-icon>history</mat-icon> Acusaciones resueltas</h2>
           @for (d of resolvedDiscoveries(); track d.id) {
-            <p class="mb-1 text-sm text-slate-400">{{ d.status === 'correct' ? '🎯' : '❌' }} {{ playerName(d.accuser_player_id) }} → {{ playerName(d.accused_player_id) }}: «{{ d.guess }}»</p>
+            <p class="mb-1 text-sm text-slate-400"><mat-icon [class]="d.status === 'correct' ? 'text-emerald-300' : 'text-rose-300'">{{ d.status === 'correct' ? 'target' : 'cancel' }}</mat-icon> {{ playerName(d.accuser_player_id) }} <mat-icon>arrow_forward</mat-icon> {{ playerName(d.accused_player_id) }}: «{{ d.guess }}»</p>
           }
         </section>
       }

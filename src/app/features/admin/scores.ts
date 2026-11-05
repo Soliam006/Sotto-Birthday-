@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
@@ -10,19 +11,26 @@ import { Leaderboard } from '../../shared/leaderboard';
 import { Empty, Spinner } from '../../shared/ui';
 import { AdminStore } from './admin-store';
 
-const SOURCE_LABELS: Record<string, string> = {
-  crash: '🏎️ Crash', overcooked: '🍳 Overcooked', duel: '♟️ Duelo', mission: '🕵️ Misión',
-  discovery: '🎯 Descubrimiento', spaghetti: '🍝 Spaghetti', adjustment: '✏️ Ajuste', void: '↩️ Anulación',
+const SOURCE_LABELS: Record<string, { icon: string; label: string }> = {
+  crash: { icon: 'sports_motorsports', label: 'Crash' },
+  overcooked: { icon: 'skillet', label: 'Overcooked' },
+  duel: { icon: 'chess', label: 'Duelo' },
+  mission: { icon: 'mystery', label: 'Misión' },
+  discovery: { icon: 'target', label: 'Descubrimiento' },
+  spaghetti: { icon: 'architecture', label: 'Spaghetti' },
+  adjustment: { icon: 'edit', label: 'Ajuste' },
+  void: { icon: 'undo', label: 'Anulación' },
 };
 
 @Component({
   selector: 'app-admin-scores',
-  imports: [FormsModule, DatePipe, Leaderboard, Spinner, Empty],
+  imports: [MatIcon, FormsModule, DatePipe, Leaderboard, Spinner, Empty],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
       <h1 class="title-xl">Puntuaciones</h1>
       <button class="btn-secondary btn-sm" (click)="toggleVisibility()">
-        {{ store.settings()?.scores_visible ? '👁️ Visible para jugadores' : '🙈 Oculta para jugadores' }} · cambiar
+        <mat-icon>{{ store.settings()?.scores_visible ? 'visibility' : 'visibility_off' }}</mat-icon>
+        {{ store.settings()?.scores_visible ? 'Visible para jugadores' : 'Oculta para jugadores' }} · cambiar
       </button>
     </div>
 
@@ -34,7 +42,7 @@ const SOURCE_LABELS: Record<string, string> = {
       </section>
 
       <section class="card">
-        <h2 class="section-title">✏️ Ajuste manual / corrección</h2>
+        <h2 class="section-title"><mat-icon>edit</mat-icon> Ajuste manual / corrección</h2>
         <form class="grid gap-3" (ngSubmit)="adjust()">
           <select class="input" name="team" [(ngModel)]="team">
             <option value="">Equipo…</option>
@@ -56,7 +64,7 @@ const SOURCE_LABELS: Record<string, string> = {
     </div>
 
     <section class="mt-6">
-      <h2 class="section-title">🧾 Historial de movimientos
+      <h2 class="section-title"><mat-icon>receipt_long</mat-icon> Historial de movimientos
         <select class="input w-auto min-h-9 py-1 font-sans text-sm" [ngModel]="filter()" (ngModelChange)="filter.set($event)" name="filter">
           <option value="">Todos</option>
           @for (t of store.teams(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
@@ -69,15 +77,15 @@ const SOURCE_LABELS: Record<string, string> = {
               <span class="size-3 shrink-0 rounded-full" [style.background]="store.teamById().get(e.team_id)?.color"></span>
               <div class="min-w-0 flex-1">
                 <p class="truncate">{{ e.reason }}</p>
-                <p class="text-xs text-slate-500">{{ sources[e.source_type] ?? e.source_type }} · {{ store.teamById().get(e.team_id)?.name }} · {{ e.created_at | date: 'HH:mm:ss' }}
+                <p class="text-xs text-slate-500"><mat-icon class="icon-xs">{{ sources[e.source_type]?.icon ?? 'tune' }}</mat-icon> {{ sources[e.source_type]?.label ?? e.source_type }} · {{ store.teamById().get(e.team_id)?.name }} · {{ e.created_at | date: 'HH:mm:ss' }}
                   @if (revertedIds().has(e.id)) { · <span class="text-rose-300">anulado</span> }</p>
               </div>
               <span class="font-display text-xl" [class]="e.points > 0 ? 'text-emerald-300' : 'text-rose-300'">{{ e.points > 0 ? '+' : '' }}{{ e.points }}</span>
               @if (!revertedIds().has(e.id) && !e.corrects_event_id) {
-                <button class="btn-ghost btn-sm px-2" title="Anular movimiento" (click)="revert(e)">↩️</button>
+                <button class="btn-ghost btn-sm px-2" title="Anular movimiento" aria-label="Anular movimiento" (click)="revert(e)"><mat-icon>undo</mat-icon></button>
               }
             </li>
-          } @empty { <app-empty icon="🧾" title="Sin movimientos" /> }
+          } @empty { <app-empty icon="receipt_long" title="Sin movimientos" /> }
         </ul>
       }
     </section>

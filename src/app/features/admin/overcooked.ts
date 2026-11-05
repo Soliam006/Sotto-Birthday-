@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmService } from '../../core/confirm.service';
@@ -15,27 +16,27 @@ interface OcResult { team_id: string; is_training: boolean; score: number; posit
 
 @Component({
   selector: 'app-admin-overcooked',
-  imports: [FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
   template: `
-    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400">← Modalidades</a>
+    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400"><mat-icon>arrow_back</mat-icon> Modalidades</a>
     <app-challenge-controls kind="overcooked" />
     @let ch = store.challenge('overcooked');
     @let confirmed = !!ch?.results_confirmed_at;
 
     @if (loading()) { <app-spinner /> } @else {
       <section class="card mb-4">
-        <h2 class="section-title">⚙️ Condiciones comunes</h2>
+        <h2 class="section-title"><mat-icon>settings</mat-icon> Condiciones comunes</h2>
         <form class="grid gap-3 sm:grid-cols-2" (ngSubmit)="saveConfig()">
           <div><label class="label" for="lvl">Nivel / escenario</label><input id="lvl" class="input" name="level" [(ngModel)]="level" placeholder="Ej.: 1-4" /></div>
           <div><label class="label" for="ppt">Cocineros por equipo</label><input id="ppt" type="number" min="1" max="4" class="input" name="ppt" [(ngModel)]="playersPerTeam" /></div>
           <div class="sm:col-span-2"><label class="label" for="cond">Condiciones</label><textarea id="cond" class="input min-h-16" name="cond" [(ngModel)]="conditions" placeholder="Ej.: modo arcade, 1 intento, sin pausa"></textarea></div>
-          <button class="btn-secondary sm:col-span-2" type="submit">💾 Guardar condiciones (visibles para los jugadores)</button>
+          <button class="btn-secondary sm:col-span-2" type="submit"><mat-icon>save</mat-icon> Guardar condiciones (visibles para los jugadores)</button>
         </form>
       </section>
 
       @for (mode of modes; track mode.training) {
         <section class="card mb-4" [class.opacity-80]="mode.training">
-          <h2 class="section-title">{{ mode.training ? '🧪 Partida de entrenamiento (no puntúa)' : '🏆 Partida oficial' }}</h2>
+          <h2 class="section-title">@if (mode.training) { <mat-icon class="text-sky-300">science</mat-icon> Partida de entrenamiento (no puntúa) } @else { 🏆 Partida oficial }</h2>
           <div class="flex flex-col gap-2">
             @for (t of activeTeams(); track t.id) {
               @let r = resultOf(t.id, mode.training);
@@ -51,7 +52,7 @@ interface OcResult { team_id: string; is_training: boolean; score: number; posit
                          (ngModelChange)="setDraft(t.id, mode.training, $event)" [name]="key(t.id, mode.training)" />
                   <button class="btn-secondary btn-sm" (click)="saveScore(t.id, mode.training)"
                           [disabled]="draft()[key(t.id, mode.training)] == null">Guardar</button>
-                  @if (r) { <span class="text-emerald-300" title="Guardado">✔</span> }
+                  @if (r) { <span class="text-emerald-300" title="Guardado"><mat-icon>check</mat-icon></span> }
                 }
               </div>
             }
@@ -61,15 +62,15 @@ interface OcResult { team_id: string; is_training: boolean; score: number; posit
 
       @if (!confirmed) {
         <section class="card">
-          <h2 class="section-title">✅ Confirmar resultados oficiales</h2>
+          <h2 class="section-title"><mat-icon>check_circle</mat-icon> Confirmar resultados oficiales</h2>
           @if (preview(); as pv) { <app-allocation-preview [rows]="pv" /> }
           <div class="mt-3 flex gap-2">
-            <button class="btn-secondary flex-1" (click)="doPreview()">👁️ Ver clasificación</button>
+            <button class="btn-secondary flex-1" (click)="doPreview()"><mat-icon>visibility</mat-icon> Ver clasificación</button>
             <button class="btn-primary flex-1" [disabled]="!preview() || busy()" (click)="confirmResults()">Confirmar y sumar puntos</button>
           </div>
         </section>
       } @else {
-        <p class="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-200">✔ Resultados confirmados e incorporados a la clasificación.</p>
+        <p class="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-200"><mat-icon>check</mat-icon> Resultados confirmados e incorporados a la clasificación.</p>
       }
     }
   `,

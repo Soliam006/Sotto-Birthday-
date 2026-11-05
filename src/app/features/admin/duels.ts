@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
@@ -13,13 +14,13 @@ import { ChallengeControls } from './challenge-controls';
 
 @Component({
   selector: 'app-admin-duels',
-  imports: [FormsModule, DatePipe, Spinner, Empty, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, FormsModule, DatePipe, Spinner, Empty, ChallengeControls, AllocationPreview],
   template: `
     <app-challenge-controls kind="duels" />
     @let ch = store.challenge('duels');
 
     @if (!creating()) {
-      <button class="btn-primary mb-5 w-full text-base" (click)="openNew()" [disabled]="ch?.status !== 'in_progress'">➕ NUEVO DUELO</button>
+      <button class="btn-primary mb-5 w-full text-base" (click)="openNew()" [disabled]="ch?.status !== 'in_progress'"><mat-icon>add</mat-icon> NUEVO DUELO</button>
       @if (ch?.status !== 'in_progress') { <p class="-mt-3 mb-4 text-center text-xs text-slate-500">Inicia la modalidad para registrar duelos.</p> }
     } @else {
       <!-- Formulario de nuevo duelo -->
@@ -37,13 +38,16 @@ import { ChallengeControls } from './challenge-controls';
           <div>
             <p class="label">2 · Formato</p>
             <div class="grid grid-cols-2 gap-2">
-              <button type="button" class="btn" [class]="format() === '1v1' ? 'btn-primary' : 'btn-secondary'" (click)="setFormat('1v1')">⚔️ 1 contra 1</button>
-              <button type="button" class="btn" [class]="format() === 'multi' ? 'btn-primary' : 'btn-secondary'" (click)="setFormat('multi')">👥 Multijugador</button>
+              <button type="button" class="btn" [class]="format() === '1v1' ? 'btn-primary' : 'btn-secondary'" (click)="setFormat('1v1')"><mat-icon>swords</mat-icon> 1 contra 1</button>
+              <button type="button" class="btn" [class]="format() === 'multi' ? 'btn-primary' : 'btn-secondary'" (click)="setFormat('multi')"><mat-icon>group</mat-icon> Multijugador</button>
             </div>
           </div>
           <div>
             <p class="label">3 · Participantes ({{ selected().length }} {{ format() === '1v1' ? '/ 2' : '· mín. 3' }})</p>
-            <input class="input mb-2" placeholder="🔍 Buscar jugador…" [ngModel]="search()" (ngModelChange)="search.set($event)" name="search" />
+            <div class="relative mb-2">
+              <mat-icon class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</mat-icon>
+              <input class="input pl-10" placeholder="Buscar jugador…" aria-label="Buscar jugador" [ngModel]="search()" (ngModelChange)="search.set($event)" name="search" />
+            </div>
             <div class="grid max-h-64 gap-1.5 overflow-y-auto sm:grid-cols-2">
               @for (p of searchable(); track p.id) {
                 @let used = usage(p.id);
@@ -65,12 +69,12 @@ import { ChallengeControls } from './challenge-controls';
                   <li class="chip bg-white/5 py-1.5 text-sm"><span class="size-2.5 rounded-full" [style.background]="store.teamOf(p.id)?.color"></span>{{ p.name }} · {{ store.teamOf(p.id)?.name }}</li>
                 }
               </ul>
-              @if (validation(); as v) { <p class="mt-2 text-sm text-rose-300">⚠️ {{ v }}</p> }
+              @if (validation(); as v) { <p class="mt-2 text-sm text-rose-300"><mat-icon>warning</mat-icon> {{ v }}</p> }
             </div>
           }
           <div class="flex gap-2">
             <button class="btn-ghost flex-1" (click)="creating.set(false)">Cancelar</button>
-            <button class="btn-success flex-1" [disabled]="!!validation() || !gameId() || busy()" (click)="create()">5 · ▶️ Iniciar duelo</button>
+            <button class="btn-success flex-1" [disabled]="!!validation() || !gameId() || busy()" (click)="create()">5 · <mat-icon>play_arrow</mat-icon> Iniciar duelo</button>
           </div>
         </div>
       </section>
@@ -79,12 +83,12 @@ import { ChallengeControls } from './challenge-controls';
     @if (loading()) { <app-spinner /> } @else {
       <!-- Activos -->
       <section class="mb-6">
-        <h2 class="section-title">🔥 Duelos en curso ({{ active().length }})</h2>
+        <h2 class="section-title"><mat-icon>local_fire_department</mat-icon> Duelos en curso ({{ active().length }})</h2>
         <div class="flex flex-col gap-3">
           @for (d of active(); track d.id) {
             <article class="card border-emerald-400/20">
               <button class="flex w-full items-start gap-3 text-left" (click)="toggleOpen(d)">
-                <span class="text-2xl">{{ d.format === '1v1' ? '⚔️' : '👥' }}</span>
+                <mat-icon class="icon-lg text-emerald-300">{{ d.format === '1v1' ? 'swords' : 'group' }}</mat-icon>
                 <div class="min-w-0 flex-1">
                   <p class="font-display text-2xl leading-tight">{{ gameName(d.game_id) }}</p>
                   <p class="text-xs text-slate-400">{{ d.format === '1v1' ? '1 contra 1' : 'Multijugador' }} · desde {{ d.started_at | date: 'HH:mm' }}</p>
@@ -105,7 +109,7 @@ import { ChallengeControls } from './challenge-controls';
                       @for (dp of d.duel_players; track dp.player_id) {
                         <button class="btn" [class]="winner() === dp.player_id ? 'btn-primary' : 'btn-secondary'" (click)="setWinner(d, dp.player_id)">🏆 {{ playerName(dp.player_id) }}</button>
                       }
-                      <button class="btn col-span-2" [class]="winner() === 'draw' ? 'btn-primary' : 'btn-ghost'" (click)="setWinner(d, 'draw')">🤝 Empate</button>
+                      <button class="btn col-span-2" [class]="winner() === 'draw' ? 'btn-primary' : 'btn-ghost'" (click)="setWinner(d, 'draw')"><mat-icon>handshake</mat-icon> Empate</button>
                     </div>
                   } @else {
                     <div class="flex flex-col gap-2">
@@ -124,22 +128,22 @@ import { ChallengeControls } from './challenge-controls';
                   }
                   @if (preview(); as pv) { <div class="mt-3"><app-allocation-preview [rows]="pv" /></div> }
                   <div class="mt-3 flex flex-wrap gap-2">
-                    <button class="btn-ghost btn-sm text-rose-300" (click)="cancel(d)">✖ Cancelar duelo</button>
-                    <button class="btn-secondary btn-sm" (click)="doPreview(d)">👁️ Ver resumen</button>
-                    <button class="btn-primary btn-sm flex-1" [disabled]="!preview() || busy()" (click)="finish(d)">🏁 FINALIZAR DUELO</button>
+                    <button class="btn-ghost btn-sm text-rose-300" (click)="cancel(d)"><mat-icon>close</mat-icon> Cancelar duelo</button>
+                    <button class="btn-secondary btn-sm" (click)="doPreview(d)"><mat-icon>visibility</mat-icon> Ver resumen</button>
+                    <button class="btn-primary btn-sm flex-1" [disabled]="!preview() || busy()" (click)="finish(d)"><mat-icon>sports_score</mat-icon> FINALIZAR DUELO</button>
                   </div>
                 </div>
               }
             </article>
           } @empty {
-            <app-empty icon="♟️" title="No hay duelos en curso" text="Cuando dos o más jugadores quieran retarse, pulsa «Nuevo duelo»." />
+            <app-empty icon="chess" title="No hay duelos en curso" text="Cuando dos o más jugadores quieran retarse, pulsa «Nuevo duelo»." />
           }
         </div>
       </section>
 
       <!-- Historial -->
       <section class="mb-6">
-        <h2 class="section-title">📚 Historial ({{ history().length }})</h2>
+        <h2 class="section-title"><mat-icon>history</mat-icon> Historial ({{ history().length }})</h2>
         <div class="flex flex-col gap-2">
           @for (d of history(); track d.id) {
             <article class="card-tight text-sm" [class.opacity-60]="d.status !== 'finished'">
@@ -162,7 +166,7 @@ import { ChallengeControls } from './challenge-controls';
 
       <!-- Juegos -->
       <section class="card">
-        <h2 class="section-title">🎲 Juegos puntuables</h2>
+        <h2 class="section-title"><mat-icon>casino</mat-icon> Juegos puntuables</h2>
         <div class="mb-3 flex flex-wrap gap-2">
           @for (g of games(); track g.id) {
             <button class="chip px-3 py-1.5 text-sm" [class]="g.active ? 'bg-emerald-500/15 text-emerald-200' : 'bg-white/5 text-slate-500 line-through'" (click)="toggleGame(g)">{{ g.name }}</button>

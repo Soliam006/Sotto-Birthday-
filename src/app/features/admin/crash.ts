@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmService } from '../../core/confirm.service';
@@ -15,9 +16,9 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
 
 @Component({
   selector: 'app-admin-crash',
-  imports: [FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, FormsModule, RouterLink, Spinner, ChallengeControls, AllocationPreview],
   template: `
-    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400">← Modalidades</a>
+    <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400"><mat-icon>arrow_back</mat-icon> Modalidades</a>
     <app-challenge-controls kind="crash" />
     @let ch = store.challenge('crash');
     @let editable = ch?.status === 'pending' || ch?.status === 'preparing';
@@ -40,7 +41,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
               </div>
             }
           </div>
-          <button class="btn-primary btn-sm mt-3" (click)="saveSetup()">💾 Guardar carreras</button>
+          <button class="btn-primary btn-sm mt-3" (click)="saveSetup()"><mat-icon>save</mat-icon> Guardar carreras</button>
         } @else {
           <p class="text-sm text-slate-400">{{ officialRaces().length }} carreras oficiales: {{ trackList() }}</p>
         }
@@ -55,7 +56,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
             @for (t of activeTeams(); track t.id) {
               <div class="rounded-xl border border-white/5 bg-ink-900 p-3">
                 <p class="mb-2 flex items-center gap-2 font-semibold"><span class="size-3 rounded-full" [style.background]="t.color"></span>{{ t.name }}
-                  @if (lineupComplete(t.id)) { <span class="chip ml-auto bg-emerald-500/15 text-emerald-300">✔ Completa</span> }
+                  @if (lineupComplete(t.id)) { <span class="chip ml-auto bg-emerald-500/15 text-emerald-300"><mat-icon>check</mat-icon> Completa</span> }
                 </p>
                 @for (r of officialRaces(); track r.id; let i = $index) {
                   <div class="mb-1.5 flex items-center gap-2">
@@ -82,7 +83,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
           @for (r of races(); track r.id) {
             <article class="card" [class.border-emerald-400/40]="r.status === 'in_progress'">
               <div class="mb-3 flex flex-wrap items-center gap-2">
-                <h3 class="font-display text-2xl">{{ r.is_training ? '🧪 Entrenamiento' : 'Carrera ' + r.race_number }}</h3>
+                <h3 class="font-display flex items-center gap-1.5 text-2xl">@if (r.is_training) { <mat-icon class="text-sky-300">science</mat-icon> Entrenamiento } @else { Carrera {{ r.race_number }} }</h3>
                 <span class="text-sm text-slate-400">{{ r.track }}</span>
                 <span class="ml-auto chip" [class]="r.status === 'finished' ? 'bg-amber-500/15 text-amber-300' : r.status === 'in_progress' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-500/15 text-slate-300'">
                   {{ r.status === 'finished' ? 'Finalizada' : r.status === 'in_progress' ? 'En pista' : 'Pendiente' }}
@@ -100,7 +101,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
                     </li>
                   }
                 </ul>
-                @if (r.is_training) { <button class="btn-ghost btn-sm mt-2" (click)="resetTraining()">↺ Repetir entrenamiento</button> }
+                @if (r.is_training) { <button class="btn-ghost btn-sm mt-2" (click)="resetTraining()"><mat-icon>restart_alt</mat-icon> Repetir entrenamiento</button> }
               } @else if (ch?.status === 'in_progress') {
                 @if (openRace() === r.id) {
                   <div class="flex flex-col gap-2">
@@ -118,14 +119,14 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
                     @if (preview(); as pv) { <app-allocation-preview [rows]="pv" /> }
                     <div class="flex flex-wrap gap-2">
                       <button class="btn-ghost btn-sm" (click)="openRace.set(null)">Cancelar</button>
-                      <button class="btn-secondary btn-sm" (click)="doPreview(r)">👁️ Calcular</button>
-                      <button class="btn-primary btn-sm flex-1" [disabled]="!preview() || busy()" (click)="confirmRace(r)">✅ Confirmar resultado</button>
+                      <button class="btn-secondary btn-sm" (click)="doPreview(r)"><mat-icon>visibility</mat-icon> Calcular</button>
+                      <button class="btn-primary btn-sm flex-1" [disabled]="!preview() || busy()" (click)="confirmRace(r)"><mat-icon>check_circle</mat-icon> Confirmar resultado</button>
                     </div>
                   </div>
                 } @else {
                   <div class="flex flex-wrap gap-2">
-                    @if (r.status === 'pending') { <button class="btn-secondary btn-sm" (click)="setRaceStatus(r, 'in_progress')">🚦 Marcar en pista</button> }
-                    <button class="btn-primary btn-sm" (click)="startEntry(r)">📝 Registrar resultado</button>
+                    @if (r.status === 'pending') { <button class="btn-secondary btn-sm" (click)="setRaceStatus(r, 'in_progress')"><mat-icon>traffic</mat-icon> Marcar en pista</button> }
+                    <button class="btn-primary btn-sm" (click)="startEntry(r)"><mat-icon>edit_note</mat-icon> Registrar resultado</button>
                   </div>
                 }
               } @else {
@@ -139,7 +140,7 @@ interface EntryRow { team: Team; player_id: string; raw_position: number | null 
       <!-- Acumulado -->
       @if (totals().length) {
         <section class="card">
-          <h2 class="section-title">🏁 Puntos acumulados en Crash</h2>
+          <h2 class="section-title"><mat-icon>sports_score</mat-icon> Puntos acumulados en Crash</h2>
           <ul class="flex flex-col gap-1.5">
             @for (t of totals(); track t.team.id) {
               <li class="flex items-center gap-2"><span class="size-3 rounded-full" [style.background]="t.team.color"></span><span class="flex-1">{{ t.team.name }}</span><span class="font-display text-2xl">{{ t.points }}</span></li>

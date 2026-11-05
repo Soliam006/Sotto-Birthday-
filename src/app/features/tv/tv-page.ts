@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, effect, inject, input, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import { syncServerClock } from '../../core/clock';
 import { LiveService } from '../../core/live.service';
@@ -16,7 +17,7 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
  */
 @Component({
   selector: 'app-tv-page',
-  imports: [DatePipe, Countdown, AnimatedNumber],
+  imports: [MatIcon, DatePipe, Countdown, AnimatedNumber],
   template: `
     <div class="tv relative flex h-dvh w-full flex-col overflow-hidden bg-ink-950 text-white" (dblclick)="fullscreen()">
       <div class="pointer-events-none absolute inset-0 opacity-60"
@@ -26,7 +27,7 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
         <div class="relative m-auto max-w-3xl text-center">
           <p class="font-display gold-text text-[8vw] leading-none">BIRTHDAY CUP</p>
           <p class="mt-6 text-[2vw] text-slate-300">{{ error() }}</p>
-          <p class="mt-2 text-[1.2vw] text-slate-500">Abre el enlace de la TV desde el panel del juez → Pantalla TV.</p>
+          <p class="mt-2 text-[1.2vw] text-slate-500">Abre el enlace de la TV desde el panel del juez <mat-icon>arrow_forward</mat-icon> Pantalla TV.</p>
         </div>
       } @else if (state(); as s) {
         <!-- Cabecera -->
@@ -40,7 +41,7 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
           </div>
           @if (s.timer; as t) {
             <div class="rounded-[1.5vw] border border-white/10 bg-black/40 px-[2vw] py-[1vh] text-center">
-              <p class="text-[1vw] uppercase tracking-[0.3em] text-slate-400">🍝 Spaghetti & Marshmallow</p>
+              <p class="text-[1vw] uppercase tracking-[0.3em] text-slate-400"><mat-icon>architecture</mat-icon> Spaghetti & Marshmallow</p>
               <div class="text-[3vw]"><app-countdown [status]="t.status" [endsAt]="t.ends_at" [pausedMs]="t.paused_remaining_ms" [durationSeconds]="t.duration_seconds" size="md" /></div>
             </div>
           }
@@ -78,7 +79,7 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
                   <p class="animate-rise text-[2vw] uppercase tracking-[0.5em] text-amber-200">🏆 Campeones de la {{ s.competition.name }} 🏆</p>
                   <h2 class="champion-name font-display text-[13vw] leading-[0.9]" [style.color]="c.color" [style.text-shadow]="'0 0 80px ' + c.color">{{ c.name }}</h2>
                   <p class="animate-rise font-display text-[6vw] leading-none text-white" style="animation-delay: .6s"><app-animated-number [value]="c.points ?? 0" [duration]="2500" /> puntos</p>
-                  <p class="animate-rise mt-[2vh] text-[2.2vw] text-slate-200" style="animation-delay: 1.2s">¡Enhorabuena, campeones! 🎉</p>
+                  <p class="animate-rise mt-[2vh] text-[2.2vw] text-slate-200" style="animation-delay: 1.2s">¡Enhorabuena, campeones! <mat-icon>celebration</mat-icon></p>
                   <div class="mt-[4vh] flex gap-[3vw]">
                     @for (r of runnersUp(); track r.team_id; let i = $index) {
                       <div class="animate-rise flex items-center gap-[1vw] rounded-[1vw] bg-white/5 px-[2vw] py-[1.5vh]" [style.animation-delay.s]="1.6 + i * 0.3">
@@ -135,7 +136,7 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
                 }
               </div>
               <footer class="flex items-center justify-between pt-[1vh] text-[1.6vh] text-slate-500">
-                <span>{{ showPoints ? 'Clasificación en directo' : '🤫 Puntuaciones ocultas · ¿quién irá ganando?' }}</span>
+                <span class="flex items-center gap-[0.5vw]">@if (showPoints) { Clasificación en directo } @else { <mat-icon>lock</mat-icon> Puntuaciones ocultas · ¿quién irá ganando? }</span>
                 @if (s.last_update) { <span>Última actualización: {{ s.last_update | date: 'HH:mm' }}</span> }
               </footer>
             }

@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
 import { SupabaseService } from '../../core/supabase.service';
@@ -8,18 +9,18 @@ import { AdminStore } from './admin-store';
 
 @Component({
   selector: 'app-admin-settings',
-  imports: [FormsModule, QrCodeView],
+  imports: [MatIcon, FormsModule, QrCodeView],
   template: `
     <h1 class="title-xl mb-4">Configuración</h1>
     @if (store.settings(); as s) {
       <div class="grid gap-4 lg:grid-cols-2">
         <section class="card">
-          <h2 class="section-title">📲 QR de invitación</h2>
+          <h2 class="section-title"><mat-icon>qr_code_2</mat-icon> QR de invitación</h2>
           <app-qr [text]="inviteUrl()" [size]="220" />
           <p class="mt-3 text-center text-sm">Código: <b class="font-display text-2xl tracking-[0.3em] text-amber-300">{{ s.invite_code }}</b></p>
           <div class="mt-3 flex flex-wrap gap-2">
-            <button class="btn-secondary flex-1" (click)="print()">🖨️ Imprimir</button>
-            <button class="btn-ghost" (click)="regenerate()">🔄 Nuevo código</button>
+            <button class="btn-secondary flex-1" (click)="print()"><mat-icon>print</mat-icon> Imprimir</button>
+            <button class="btn-ghost" (click)="regenerate()"><mat-icon>refresh</mat-icon> Nuevo código</button>
           </div>
           <label class="mt-4 flex items-center justify-between gap-3 rounded-xl bg-ink-800 p-3">
             <span class="text-sm"><b>Registro abierto</b><br /><span class="text-xs text-slate-400">Si lo cierras, solo podrán entrar con su QR personal.</span></span>
@@ -28,26 +29,26 @@ import { AdminStore } from './admin-store';
         </section>
 
         <section class="card">
-          <h2 class="section-title">🏷️ Competición</h2>
+          <h2 class="section-title"><mat-icon>label</mat-icon> Competición</h2>
           <form class="grid gap-3" (ngSubmit)="saveNames()">
             <div><label class="label" for="cname">Nombre</label><input id="cname" class="input" name="name" [(ngModel)]="name" maxlength="60" /></div>
             <div><label class="label" for="csub">Subtítulo (p. ej. «Los 30 de Marta»)</label><input id="csub" class="input" name="subtitle" [(ngModel)]="subtitle" maxlength="80" /></div>
             <button class="btn-secondary" type="submit">Guardar</button>
           </form>
 
-          <h2 class="section-title mt-6">👁️ Visibilidad de puntuaciones para jugadores</h2>
+          <h2 class="section-title mt-6"><mat-icon>visibility</mat-icon> Visibilidad de puntuaciones para jugadores</h2>
           <div class="grid grid-cols-2 gap-2">
-            <button class="btn" [class]="s.scores_visible ? 'btn-primary' : 'btn-secondary'" (click)="setVisible(true)">👁️ Visible</button>
-            <button class="btn" [class]="!s.scores_visible ? 'btn-primary' : 'btn-secondary'" (click)="setVisible(false)">🙈 Oculta</button>
+            <button class="btn" [class]="s.scores_visible ? 'btn-primary' : 'btn-secondary'" (click)="setVisible(true)"><mat-icon>visibility</mat-icon> Visible</button>
+            <button class="btn" [class]="!s.scores_visible ? 'btn-primary' : 'btn-secondary'" (click)="setVisible(false)"><mat-icon>visibility_off</mat-icon> Oculta</button>
           </div>
           <p class="mt-2 text-xs text-slate-500">Cuando está oculta, el servidor no entrega puntos ni posiciones a los jugadores. La TV se controla aparte.</p>
 
-          <h2 class="section-title mt-6">🚦 Estado</h2>
+          <h2 class="section-title mt-6"><mat-icon>traffic</mat-icon> Estado</h2>
           <p class="text-sm text-slate-300">Competición: <b>{{ statusLabel() }}</b></p>
           @if (s.status === 'finished') {
-            <button class="btn-ghost btn-sm mt-2" (click)="setStatus('running')">↩️ Reabrir competición</button>
+            <button class="btn-ghost btn-sm mt-2" (click)="setStatus('running')"><mat-icon>undo</mat-icon> Reabrir competición</button>
           } @else {
-            <button class="btn-secondary btn-sm mt-2" (click)="setStatus('finished')">🏁 Finalizar competición</button>
+            <button class="btn-secondary btn-sm mt-2" (click)="setStatus('finished')"><mat-icon>sports_score</mat-icon> Finalizar competición</button>
           }
         </section>
       </div>

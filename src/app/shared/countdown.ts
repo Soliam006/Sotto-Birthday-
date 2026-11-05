@@ -1,18 +1,20 @@
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { formatMs, remainingMs } from '../core/clock';
 
 /** Cronómetro calculado a partir de la hora de fin almacenada en servidor. */
 @Component({
   selector: 'app-countdown',
+  imports: [MatIcon],
   template: `
     <div class="flex flex-col items-center">
       <span class="font-display tabular-nums leading-none" [class]="sizeClass()"
             [class.text-rose-400]="ms() > 0 && ms() < 60000" [class.animate-pulse]="ms() > 0 && ms() < 60000">
         {{ text() }}
       </span>
-      @if (status() === 'paused') { <span class="chip mt-1 bg-sky-500/20 text-sky-200">⏸ En pausa</span> }
+      @if (status() === 'paused') { <span class="chip mt-1 bg-sky-500/20 text-sky-200"><mat-icon>pause</mat-icon> En pausa</span> }
       @if (status() === 'finished' || (status() === 'running' && ms() === 0)) {
-        <span class="chip mt-1 bg-rose-500/20 text-rose-200">⏰ ¡Tiempo!</span>
+        <span class="chip mt-1 bg-rose-500/20 text-rose-200"><mat-icon>alarm</mat-icon> ¡Tiempo!</span>
       }
     </div>
   `,

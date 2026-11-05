@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
 import { Team } from '../../core/models';
@@ -10,7 +11,7 @@ const PALETTE = ['#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#EAB308
 
 @Component({
   selector: 'app-admin-teams',
-  imports: [FormsModule],
+  imports: [MatIcon, FormsModule],
   template: `
     <div class="mb-4 flex items-end justify-between">
       <h1 class="title-xl">Equipos</h1>
@@ -46,8 +47,8 @@ const PALETTE = ['#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#EAB308
                 <h2 class="font-display truncate text-2xl">{{ t.name }}</h2>
                 <p class="text-xs text-slate-400">{{ members(t.id).length }} integrantes · {{ points(t.id) }} pts</p>
               </div>
-              <button class="btn-ghost btn-sm" (click)="edit(t)">✏️</button>
-              <button class="btn-ghost btn-sm" (click)="remove(t)" aria-label="Eliminar">🗑️</button>
+              <button class="btn-ghost btn-sm" (click)="edit(t)" [attr.aria-label]="'Editar ' + t.name"><mat-icon>edit</mat-icon></button>
+              <button class="btn-ghost btn-sm" (click)="remove(t)" [attr.aria-label]="'Eliminar ' + t.name"><mat-icon>delete</mat-icon></button>
             </div>
             <p class="mt-3 text-sm text-slate-300">{{ members(t.id).join(', ') || 'Sin integrantes todavía' }}</p>
           }
@@ -66,7 +67,7 @@ const PALETTE = ['#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#EAB308
           }
           <input type="color" class="size-8 cursor-pointer rounded-full bg-transparent" name="newColor" [(ngModel)]="newColor" />
         </div>
-        <button type="submit" class="btn-primary" [disabled]="!newName().trim()">➕ Crear equipo</button>
+        <button type="submit" class="btn-primary" [disabled]="!newName().trim()"><mat-icon>add</mat-icon> Crear equipo</button>
       </form>
     }
   `,

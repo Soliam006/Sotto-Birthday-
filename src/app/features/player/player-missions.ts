@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../core/confirm.service';
 import { LiveService } from '../../core/live.service';
@@ -12,10 +13,10 @@ interface RevealedMission { player: string; team: string; color: string; descrip
 
 @Component({
   selector: 'app-player-missions',
-  imports: [FormsModule, Spinner, Empty, ErrorBox, TeamDot],
+  imports: [MatIcon, FormsModule, Spinner, Empty, ErrorBox, TeamDot],
   template: `
     <h1 class="title-lg mb-1">Mis misiones</h1>
-    <p class="mb-4 text-sm text-slate-400">🤐 Son secretas: solo tú y el juez podéis verlas.</p>
+    <p class="mb-4 text-sm text-slate-400"><mat-icon>visibility_lock</mat-icon> Son secretas: solo tú y el juez podéis verlas.</p>
 
     @if (loading()) {
       <app-spinner />
@@ -47,17 +48,17 @@ interface RevealedMission { player: string; team: string; color: string; descrip
                   </div>
                 </form>
               } @else {
-                <button class="btn-primary mt-3 w-full" (click)="claiming.set(m.id); note.set('')">✅ ¡La he completado!</button>
+                <button class="btn-primary mt-3 w-full" (click)="claiming.set(m.id); note.set('')"><mat-icon>check_circle</mat-icon> ¡La he completado!</button>
               }
             }
           </article>
         } @empty {
-          <app-empty icon="🕵️" title="Aún no tienes misiones" text="El juez te asignará tus misiones secretas. ¡Atento!" />
+          <app-empty icon="mystery" title="Aún no tienes misiones" text="El juez te asignará tus misiones secretas. ¡Atento!" />
         }
       </section>
 
       <section class="mb-6">
-        <h2 class="section-title">🔎 Desenmascarar a alguien</h2>
+        <h2 class="section-title"><mat-icon>search</mat-icon> Desenmascarar a alguien</h2>
         <form class="card flex flex-col gap-3" (ngSubmit)="accuse()">
           <p class="text-sm text-slate-300">¿Crees que un rival está cumpliendo una misión? Si aciertas, tu equipo gana <b>5 puntos</b>. Fallar no penaliza.</p>
           <div>
@@ -72,13 +73,13 @@ interface RevealedMission { player: string; team: string; color: string; descrip
             <textarea id="guess" name="guess" class="input min-h-20" maxlength="500" [(ngModel)]="guess"
                       placeholder="Ej.: Intenta que alguien cuente una anécdota"></textarea>
           </div>
-          <button type="submit" class="btn-secondary" [disabled]="!accused() || guess().trim().length < 3 || busy()">🎯 Enviar acusación</button>
+          <button type="submit" class="btn-secondary" [disabled]="!accused() || guess().trim().length < 3 || busy()"><mat-icon>target</mat-icon> Enviar acusación</button>
         </form>
         @if (discoveries().length) {
           <ul class="mt-3 flex flex-col gap-2">
             @for (d of discoveries(); track d.id) {
               <li class="card-tight flex items-start gap-3 text-sm">
-                <span class="text-lg">{{ d.status === 'correct' ? '🎯' : d.status === 'incorrect' ? '❌' : '⏳' }}</span>
+                <mat-icon class="icon-md" [class]="d.status === 'correct' ? 'text-emerald-300' : d.status === 'incorrect' ? 'text-rose-300' : 'text-amber-300'">{{ d.status === 'correct' ? 'target' : d.status === 'incorrect' ? 'cancel' : 'hourglass_top' }}</mat-icon>
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold">{{ playerName(d.accused_player_id) }}</p>
                   <p class="text-slate-400">{{ d.guess }}</p>
@@ -93,7 +94,7 @@ interface RevealedMission { player: string; team: string; color: string; descrip
 
       @if (revealed(); as rv) {
         <section class="mb-6">
-          <h2 class="section-title">📜 Todas las misiones (reveladas)</h2>
+          <h2 class="section-title"><mat-icon>menu_book</mat-icon> Todas las misiones (reveladas)</h2>
           <ul class="flex flex-col gap-2">
             @for (r of rv; track $index) {
               <li class="card-tight text-sm">
@@ -169,11 +170,11 @@ export class PlayerMissions implements OnInit {
   private notify(prev: Mission[], next: Mission[]): void {
     for (const m of next) {
       const old = prev.find((x) => x.id === m.id);
-      if (!old) { this.toast.info('🕵️ ¡Tienes una nueva misión secreta!'); continue; }
+      if (!old) { this.toast.info('¡Tienes una nueva misión secreta!'); continue; }
       if (old.status !== m.status) {
         if (m.status === 'validated') this.toast.points(`¡Misión validada! +${m.reward} para tu equipo`);
         if (m.status === 'rejected') this.toast.info('El juez ha rechazado tu misión. Puedes volver a intentarlo.');
-        if (m.status === 'discovered') this.toast.info('😱 ¡Te han descubierto una misión!');
+        if (m.status === 'discovered') this.toast.info('¡Te han descubierto una misión!');
       }
     }
   }

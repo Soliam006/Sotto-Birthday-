@@ -23,6 +23,20 @@
 
 :root { color-scheme: dark; }
 
+/* Iconos (Angular Material <mat-icon> + Material Symbols Rounded).
+   Se doblan las clases para ganar a los estilos de MatIcon (24px fijos):
+   el icono mide 1em y su tamaño se controla con --icon-size (utilidades icon-*). */
+.mat-icon.mat-icon {
+  font-size: var(--icon-size, 1.25em);
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden; /* si la fuente aún no ha cargado, el nombre del icono no desborda */
+  flex-shrink: 0;
+  vertical-align: -0.22em;
+  font-variation-settings: 'FILL' var(--icon-fill, 0), 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
 html, body { min-height: 100%; }
 body {
   @apply bg-ink-950 text-slate-100 font-sans antialiased;
@@ -32,6 +46,14 @@ body {
   background-attachment: fixed;
   -webkit-tap-highlight-color: transparent;
 }
+
+@utility icon-xs { --icon-size: 1rem; }
+@utility icon-sm { --icon-size: 1.125rem; }
+@utility icon-md { --icon-size: 1.5rem; }
+@utility icon-lg { --icon-size: 1.875rem; }
+@utility icon-xl { --icon-size: 2.5rem; }
+@utility icon-2xl { --icon-size: 3rem; }
+@utility icon-fill { --icon-fill: 1; }
 
 @utility title-xl { @apply font-display text-4xl leading-none tracking-wide;
 }
@@ -69,7 +91,7 @@ body {
 }
 @utility muted { @apply text-slate-400;
 }
-@utility section-title { @apply mb-3 flex items-center justify-between gap-2 font-display text-xl tracking-wider text-slate-200;
+@utility section-title { @apply mb-3 flex items-center gap-2 font-display text-xl tracking-wider text-slate-200;
 }
 @utility gold-text {
     background: linear-gradient(90deg, #fde68a, #fbbf24, #f97316, #fbbf24, #fde68a);
@@ -77,6 +99,10 @@ body {
     -webkit-background-clip: text; background-clip: text; color: transparent;
     @apply animate-shine;
 }
+
+/* Títulos de sección: icono + texto a la izquierda; el último elemento
+   (enlace, botón, selector, contador) se alinea a la derecha. */
+.section-title > :last-child:not(.mat-icon) { margin-left: auto; }
 
 /* Scrollbar discreta */
 * { scrollbar-width: thin; scrollbar-color: #343b55 transparent; }
