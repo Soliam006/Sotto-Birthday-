@@ -6,11 +6,12 @@ import { SupabaseService } from '../../core/supabase.service';
 import { Countdown } from '../../shared/countdown';
 import { ErrorBox, Spinner, StatusBadge } from '../../shared/ui';
 import { CrashLineupEditor } from './crash-lineup-editor';
+import { OvercookedRosterEditor } from './overcooked-roster-editor';
 import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-modalities',
-  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown, CrashLineupEditor],
+  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown, CrashLineupEditor, OvercookedRosterEditor],
   template: `
     <h1 class="title-lg mb-1">Modalidades</h1>
     <p class="mb-4 text-sm text-slate-400">Pulsa una modalidad para ver sus reglas y la información para participar.</p>
@@ -30,6 +31,10 @@ import { PlayerStore } from './player-store';
                   <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">format_list_numbered</mat-icon> Falta el orden de pilotos</span>
                 } @else if (c.kind === 'crash' && m.crash.my_slots.length) {
                   <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">sports_score</mat-icon> Corres en la {{ m.crash.my_slots.join(' y ') }}</span>
+                } @else if (c.kind === 'overcooked' && rosterMissing()) {
+                  <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">groups</mat-icon> Faltan cocineros por elegir</span>
+                } @else if (c.kind === 'overcooked' && m.overcooked.i_play) {
+                  <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">skillet</mat-icon> Cocinas en la partida oficial</span>
                 }
               </span>
               <span class="flex shrink-0 items-center gap-1">
@@ -68,13 +73,22 @@ import { PlayerStore } from './player-store';
                   }
                 }
                 @case ('overcooked') {
+                  @if (m.overcooked.i_play) {
+                    <p class="rounded-xl bg-amber-500/10 p-3 text-sm text-amber-200"><mat-icon>skillet</mat-icon> Cocinas en la partida oficial de tu equipo. ¡Prepárate!</p>
+                  }
                   <dl class="grid grid-cols-2 gap-2 text-sm">
                     <div class="rounded-lg bg-ink-800 p-2"><dt class="text-xs text-slate-400">Nivel</dt><dd class="font-semibold">{{ cfg(c, 'level') || 'Por anunciar' }}</dd></div>
-                    <div class="rounded-lg bg-ink-800 p-2"><dt class="text-xs text-slate-400">Cocineros por equipo</dt><dd class="font-semibold">{{ cfg(c, 'players_per_team') || 'Libre' }}</dd></div>
+                    <div class="rounded-lg bg-ink-800 p-2"><dt class="text-xs text-slate-400">Cocineros por equipo</dt><dd class="font-semibold">{{ cfg(c, 'players_per_team') || 'Por anunciar' }}</dd></div>
                     @if (cfg(c, 'conditions')) {
                       <div class="col-span-2 rounded-lg bg-ink-800 p-2"><dt class="text-xs text-slate-400">Condiciones</dt><dd>{{ cfg(c, 'conditions') }}</dd></div>
                     }
                   </dl>
+                  @if (m.overcooked.required > 0 && store.team()) {
+                    <app-overcooked-roster-editor [overcooked]="m.overcooked" [members]="store.team()!.members" [me]="store.state()?.player?.id"
+                                                  (reload)="store.loadModalities()" />
+                  } @else if (!m.overcooked.players_per_team) {
+                    <p class="rounded-xl bg-ink-800 p-3 text-sm text-slate-400">El juez aún no ha fijado cuántos cocineros juegan por equipo. Cuando lo haga, podréis elegirlos aquí.</p>
+                  }
                 }
                 @case ('duels') {
                   <div class="rounded-xl bg-ink-800 p-3 text-sm">
@@ -137,6 +151,12 @@ export class PlayerModalitiesPage implements OnInit {
   protected readonly lineupMissing = computed(() => {
     const c = this.store.modalities()?.crash;
     return !!c && c.can_edit_lineup && !!this.store.team() && c.lineup.length < c.race_count;
+  });
+
+  /** El equipo aún no ha completado su selección de cocineros de Overcooked */
+  protected readonly rosterMissing = computed(() => {
+    const o = this.store.modalities()?.overcooked;
+    return !!o && o.can_edit_roster && !!this.store.team() && o.roster.length < o.required;
   });
 
   ngOnInit(): void {

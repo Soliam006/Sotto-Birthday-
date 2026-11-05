@@ -209,6 +209,22 @@ export interface PlayerModalities {
     /** Nombre de quien guardó por última vez, o «el juez» */
     lineup_updated_by: string | null;
   };
+  overcooked: {
+    /** Cocineros por equipo fijados por el juez (0 = sin fijar) */
+    players_per_team: number;
+    /** Cocineros exigidos a MI equipo (menos si el equipo tiene menos miembros) */
+    required: number;
+    can_edit_roster: boolean;
+    /** Motivo por el que la selección está cerrada (null = editable) */
+    lock_reason: string | null;
+    /** Cocineros elegidos en mi equipo (sin orden) */
+    roster: string[];
+    i_play: boolean;
+    roster_version: number;
+    roster_updated_at: string | null;
+    roster_updated_by_id: string | null;
+    roster_updated_by: string | null;
+  };
   duels: { games: string[]; my_count: number; limit: number };
   spaghetti: {
     timer_status: TimerStatus;

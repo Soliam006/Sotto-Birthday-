@@ -270,9 +270,42 @@ select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
 select id as oc_ch from public.challenges where kind = 'overcooked' \gset
 select public.admin_overcooked_save_score(:'red', 50, true);  -- entrenamiento permitido aunque no esté en curso
 select public.admin_set_challenge_status(:'oc_ch', 'in_progress');
+-- Selección de cocineros (players_per_team = 2 por defecto)
+select pg_temp.expect_error(format($$select public.admin_overcooked_save_score(%L, 300)$$, :'red'), 'Completa primero los 2 cocineros');
+reset role;
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001'); -- Ana (Rojo)
+select pg_temp.assert((public.get_player_modalities() -> 'overcooked' ->> 'required')::int = 2, 'se exigen 2 cocineros');
+select pg_temp.assert((public.get_player_modalities() -> 'overcooked' ->> 'can_edit_roster')::boolean, 'Ana puede elegir');
+select pg_temp.assert((public.player_overcooked_set_roster(array[:'ana', :'bruno']::uuid[], 0) ->> 'version')::int = 1, 'Ana guarda la selección');
+reset role;
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000002'); -- Bruno, con versión antigua
+select pg_temp.expect_error(format($$select public.player_overcooked_set_roster(array[%L, %L]::uuid[], 0)$$, :'ana', :'bruno'), 'compañero acaba de guardar');
+select pg_temp.expect_error(format($$select public.player_overcooked_set_roster(array[%L]::uuid[], 1)$$, :'ana'), 'exactamente 2');
+select pg_temp.expect_error(format($$select public.player_overcooked_set_roster(array[%L, %L]::uuid[], 1)$$, :'ana', :'carla'), 'pertenecer al equipo');
+select pg_temp.expect_error(format($$select public.player_overcooked_set_roster(array[%L, %L]::uuid[], 1)$$, :'ana', :'ana'), 'repetidos');
+select pg_temp.assert((public.get_player_modalities() -> 'overcooked' ->> 'i_play')::boolean, 'Bruno juega');
+select pg_temp.assert((public.get_player_modalities() -> 'overcooked' ->> 'roster_updated_by') = 'Ana', 'autor: Ana');
+select pg_temp.assert((select count(*) from public.overcooked_rosters) = 2, 'solo ve la selección de su equipo');
+reset role;
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select public.admin_overcooked_set_roster(:'blue', array[:'carla', :'dani']::uuid[]);
+select public.admin_overcooked_set_roster(:'green', array[:'elena', :'gabi']::uuid[]);
+select public.admin_overcooked_set_roster(:'orange', array[:'fede']::uuid[]);  -- equipo de 1: juega entero
 select public.admin_overcooked_save_score(:'red', 300);
 select public.admin_overcooked_save_score(:'blue', 300);
 select public.admin_overcooked_save_score(:'green', 120);
+select pg_temp.expect_error(format($$select public.admin_update_challenge_config(%L, '{"players_per_team": 3}')$$, :'oc_ch'), 'Ya hay partidas oficiales');
+reset role;
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001'); -- Ana: su equipo ya jugó
+select pg_temp.expect_error(format($$select public.player_overcooked_set_roster(array[%L, %L]::uuid[], 1)$$, :'bruno', :'ana'), 'ya ha jugado');
+select pg_temp.assert(not (public.get_player_modalities() -> 'overcooked' ->> 'can_edit_roster')::boolean, 'selección cerrada');
+reset role;
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
 select pg_temp.expect_error($$select public.admin_overcooked_confirm()$$, 'Falta la puntuación');
 select public.admin_overcooked_save_score(:'orange', 80);
 select pg_temp.expect_error(format($$select public.admin_set_challenge_status(%L, 'finished')$$, :'oc_ch'), 'Confirma');
