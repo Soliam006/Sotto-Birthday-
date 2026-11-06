@@ -13,10 +13,11 @@ import { Spinner } from '../../shared/ui';
 import { AdminStore } from './admin-store';
 import { AllocationPreview } from './allocation-preview';
 import { ChallengeControls } from './challenge-controls';
+import { SpaghettiHintsAdmin } from './spaghetti-hints-admin';
 
 @Component({
   selector: 'app-admin-spaghetti',
-  imports: [MatIcon, FormsModule, RouterLink, Spinner, Countdown, ChallengeControls, AllocationPreview],
+  imports: [MatIcon, FormsModule, RouterLink, Spinner, Countdown, ChallengeControls, AllocationPreview, SpaghettiHintsAdmin],
   template: `
     <a routerLink="/admin/modalities" class="mb-2 inline-block text-xs text-slate-400"><mat-icon>arrow_back</mat-icon> Modalidades</a>
     <app-challenge-controls kind="spaghetti" />
@@ -80,6 +81,8 @@ import { ChallengeControls } from './challenge-controls';
           </div>
         </section>
       </div>
+
+      <app-spaghetti-hints-admin [timer]="s" />
 
       <!-- Clasificación -->
       <section class="card mt-4">

@@ -28,3 +28,21 @@ export function formatMs(ms: number): string {
   const s = total % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+/**
+ * ms de prueba transcurridos de un cronómetro del servidor
+ * (null = sin iniciar o cancelado). Las pausas no cuentan.
+ */
+export function elapsedMs(t: {
+  timer_status?: string; status?: string; ends_at: string | null; paused_remaining_ms: number | null; duration_seconds: number;
+}): number | null {
+  const st = t.timer_status ?? t.status;
+  if (st === 'finished') return t.duration_seconds * 1000;
+  if (st !== 'running' && st !== 'paused') return null;
+  return Math.max(0, t.duration_seconds * 1000 - remainingMs(t));
+}
+
+/** Formato corto de minuto de prueba: 240 → «4:00» */
+export function formatClock(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+}

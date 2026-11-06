@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
-import { syncServerClock } from '../../core/clock';
+import { elapsedMs, formatMs, syncServerClock } from '../../core/clock';
 import { LiveService } from '../../core/live.service';
 import { StandingRow, TvState } from '../../core/models';
 import { SupabaseService } from '../../core/supabase.service';
@@ -43,6 +43,13 @@ const KEY_STORAGE = 'birthday-cup-tv-key';
             <div class="rounded-[1.5vw] border border-white/10 bg-black/40 px-[2vw] py-[1vh] text-center">
               <p class="text-[1vw] uppercase tracking-[0.3em] text-slate-400"><mat-icon>architecture</mat-icon> Spaghetti & Marshmallow</p>
               <div class="text-[3vw]"><app-countdown [status]="t.status" [endsAt]="t.ends_at" [pausedMs]="t.paused_remaining_ms" [durationSeconds]="t.duration_seconds" size="md" /></div>
+              @if (hintProgress(); as hp) {
+                <p class="mt-[0.5vh] flex items-center justify-center gap-[0.5vw] text-[1.2vw] text-amber-200">
+                  <mat-icon>tips_and_updates</mat-icon> Pista {{ hp.opened }} de {{ hp.total }}
+                  @if (hp.nextMs !== null) { <span class="text-slate-400">· siguiente en <b class="tabular-nums text-white">{{ fmt(hp.nextMs) }}</b></span> }
+                  @else { <span class="text-slate-400">· todas abiertas</span> }
+                </p>
+              }
             </div>
           }
         </header>
@@ -179,6 +186,25 @@ export class TvPage implements OnInit {
   });
   protected readonly rest = computed(() => this.sorted().slice(3));
 
+  /** Progreso de las pistas de Spaghetti (se calcula cada segundo con el reloj del servidor) */
+  private readonly tick = signal(0);
+  protected readonly hintProgress = computed(() => {
+    this.tick();
+    const t = this.state()?.timer;
+    if (!t?.hints?.length) return null;
+    const elapsed = elapsedMs(t) ?? 0;
+    const reached = (h: { is_open: boolean; open_at_seconds: number }) => h.is_open || elapsed >= h.open_at_seconds * 1000;
+    const next = t.hints.find((h) => !reached(h));
+    return {
+      total: t.hints.length,
+      opened: t.hints.filter(reached).length,
+      nextMs: next ? Math.max(0, next.open_at_seconds * 1000 - elapsed) : null,
+    };
+  });
+  protected fmt(ms: number): string {
+    return formatMs(ms);
+  }
+
   protected readonly confetti = Array.from({ length: 90 }, () => ({
     x: Math.random() * 100,
     c: ['#fbbf24', '#f97316', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#ffffff'][Math.floor(Math.random() * 7)],
@@ -200,6 +226,8 @@ export class TvPage implements OnInit {
   }
 
   ngOnInit(): void {
+    const tickId = setInterval(() => this.tick.update((v) => v + 1), 500);
+    this.destroyRef.onDestroy(() => clearInterval(tickId));
     this.accessKey = this.key() ?? this.readKey() ?? '';
     if (this.key()) this.storeKey(this.key()!);
     if (!this.accessKey) {

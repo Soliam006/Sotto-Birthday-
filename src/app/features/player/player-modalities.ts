@@ -7,11 +7,13 @@ import { Countdown } from '../../shared/countdown';
 import { ErrorBox, Spinner, StatusBadge } from '../../shared/ui';
 import { CrashLineupEditor } from './crash-lineup-editor';
 import { OvercookedRosterEditor } from './overcooked-roster-editor';
+import { SpaghettiHints } from './spaghetti-hints';
+import { ImageLightbox } from '../../shared/image-lightbox';
 import { PlayerStore } from './player-store';
 
 @Component({
   selector: 'app-player-modalities',
-  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown, CrashLineupEditor, OvercookedRosterEditor],
+  imports: [MatIcon, RouterLink, StatusBadge, Spinner, ErrorBox, Countdown, CrashLineupEditor, OvercookedRosterEditor, SpaghettiHints, ImageLightbox],
   template: `
     <h1 class="title-lg mb-1">Modalidades</h1>
     <p class="mb-4 text-sm text-slate-400">Pulsa una modalidad para ver sus reglas y la información para participar.</p>
@@ -33,6 +35,8 @@ import { PlayerStore } from './player-store';
                   <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">sports_score</mat-icon> Corres en la {{ m.crash.my_slots.join(' y ') }}</span>
                 } @else if (c.kind === 'overcooked' && rosterMissing()) {
                   <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">groups</mat-icon> Faltan cocineros por elegir</span>
+                } @else if (c.kind === 'spaghetti' && spaghettiActive() && m.spaghetti.hints.length) {
+                  <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">tips_and_updates</mat-icon> Pistas: {{ openHints() }} / {{ m.spaghetti.hints.length }}</span>
                 } @else if (c.kind === 'overcooked' && m.overcooked.i_play) {
                   <span class="chip mt-1 bg-amber-500/15 text-amber-300"><mat-icon class="icon-xs">skillet</mat-icon> Cocinas en la partida oficial</span>
                 }
@@ -112,12 +116,14 @@ import { PlayerStore } from './player-store';
                   }
                   @if (m.spaghetti.reference_image_path) {
                     <figure>
-                      <img [src]="imageUrl(m.spaghetti.reference_image_path)" alt="Estructura de referencia"
-                           class="w-full rounded-xl border border-white/10 bg-black object-contain" loading="lazy" />
+                      <app-image-lightbox [src]="imageUrl(m.spaghetti.reference_image_path)" alt="Estructura de referencia" />
                       <figcaption class="mt-1 text-center text-xs text-slate-400">Estructura que debéis reproducir</figcaption>
                     </figure>
                   } @else {
                     <p class="rounded-xl bg-ink-800 p-3 text-center text-sm text-slate-400"><mat-icon>image</mat-icon> La imagen de referencia se mostrará al comenzar la prueba.</p>
+                  }
+                  @if (m.spaghetti.hints.length) {
+                    <app-spaghetti-hints [spaghetti]="m.spaghetti" (reload)="store.loadModalities()" />
                   }
                 }
               }
@@ -158,6 +164,9 @@ export class PlayerModalitiesPage implements OnInit {
     const o = this.store.modalities()?.overcooked;
     return !!o && o.can_edit_roster && !!this.store.team() && o.roster.length < o.required;
   });
+
+  protected readonly spaghettiActive = computed(() => ['running', 'paused'].includes(this.store.modalities()?.spaghetti.timer_status ?? ''));
+  protected readonly openHints = computed(() => this.store.modalities()?.spaghetti.hints.filter((h) => h.is_open).length ?? 0);
 
   ngOnInit(): void {
     // Enlace desde Inicio (/player/modalities#crash): se abre y se desplaza a esa modalidad
