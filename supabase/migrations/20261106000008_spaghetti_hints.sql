@@ -13,7 +13,35 @@
 --   y el segundo de apertura.
 -- =============================================================================
 
-create table public.spaghetti_hints (
+-- Script idempotente: se puede volver a ejecutar si un intento anterior falló a medias.
+
+-- Utilidad de 0001 (se recrea por si no existe en el proyecto; misma definición)
+create or replace function public.tg_set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+
+-- Reparación: triggers de updated_at de 0001 que faltan si la función no existía
+do $$
+declare r record;
+begin
+  for r in select * from (values
+      ('trg_settings_updated', 'competition_settings'), ('trg_tv_updated', 'tv_settings'),
+      ('trg_teams_updated', 'teams'), ('trg_players_updated', 'players'),
+      ('trg_challenges_updated', 'challenges'), ('trg_crash_races_updated', 'crash_races'),
+      ('trg_overcooked_updated', 'overcooked_results'), ('trg_spaghetti_updated', 'spaghetti_state'),
+      ('trg_duels_updated', 'duels'), ('trg_missions_updated', 'missions')
+    ) as t(trg, tbl) loop
+    if to_regclass('public.' || r.tbl) is not null
+       and not exists (select 1 from pg_trigger where tgname = r.trg and tgrelid = ('public.' || r.tbl)::regclass) then
+      execute format('create trigger %I before update on public.%I for each row execute function public.tg_set_updated_at()', r.trg, r.tbl);
+    end if;
+  end loop;
+end $$;
+
+create table if not exists public.spaghetti_hints (
   id               uuid primary key default gen_random_uuid(),
   position         int  not null check (position >= 1),
   title            text not null default '' check (char_length(title) <= 80),
@@ -23,13 +51,16 @@ create table public.spaghetti_hints (
   updated_at       timestamptz not null default now(),
   constraint spaghetti_hints_position_uq unique (position) deferrable initially deferred
 );
+drop trigger if exists trg_spaghetti_hints_updated on public.spaghetti_hints;
 create trigger trg_spaghetti_hints_updated before update on public.spaghetti_hints
   for each row execute function public.tg_set_updated_at();
+drop trigger if exists trg_signal_spaghetti_hints on public.spaghetti_hints;
 create trigger trg_signal_spaghetti_hints after insert or update or delete on public.spaghetti_hints
   for each statement execute function public.tg_bump_signal('spaghetti');
 
 alter table public.spaghetti_hints enable row level security;
 grant select on public.spaghetti_hints to authenticated;
+drop policy if exists spaghetti_hints_admin on public.spaghetti_hints;
 create policy spaghetti_hints_admin on public.spaghetti_hints for select to authenticated
   using (public.is_admin());
 
@@ -45,6 +76,7 @@ begin
   update public.spaghetti_hints set manual_opened_at = null where manual_opened_at is not null;
   return null;
 end $$;
+drop trigger if exists trg_spaghetti_reset_manual_hints on public.spaghetti_state;
 create trigger trg_spaghetti_reset_manual_hints after update of timer_status on public.spaghetti_state
   for each row
   when (new.timer_status = 'idle'
