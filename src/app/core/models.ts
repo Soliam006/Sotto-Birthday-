@@ -232,8 +232,25 @@ export interface PlayerModalities {
     ends_at: string | null;
     paused_remaining_ms: number | null;
     reference_image_path: string | null;
+    /** Pistas: imagen y título solo de las abiertas */
+    hints: SpaghettiHint[];
   };
   server_now: string;
+}
+
+/** Pista de Spaghetti tal como la entrega el servidor */
+export interface SpaghettiHint {
+  /** Número de pista (1, 2, 3…) */
+  number: number;
+  /** Segundo de prueba en que se abre */
+  open_at_seconds: number;
+  is_open: boolean;
+  opened_manually: boolean;
+  /** Solo si está abierta (o para el juez) */
+  title: string | null;
+  image_path: string | null;
+  /** Solo para el juez */
+  id?: string;
 }
 
 export interface TvState {
@@ -248,6 +265,8 @@ export interface TvState {
     ends_at: string | null;
     paused_remaining_ms: number | null;
     duration_seconds: number;
+    /** Calendario de pistas (sin imágenes) */
+    hints: Pick<SpaghettiHint, 'number' | 'open_at_seconds' | 'is_open'>[];
   } | null;
   server_now: string;
 }

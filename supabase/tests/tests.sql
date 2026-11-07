@@ -432,4 +432,89 @@ select public.admin_crash_set_lineup(:'red', array[:'ana', :'bruno']::uuid[]);
 select pg_temp.assert((select version from public.crash_lineup_meta where team_id = :'red') = 4, 'juez: versión 4');
 reset role;
 
+-- 13. Spaghetti: pistas que se abren con el cronómetro -----------------------
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select public.admin_set_competition_status('running');
+select public.admin_spaghetti_timer('reset', 30);
+select pg_temp.expect_error($$select public.admin_spaghetti_add_hint('otra/carpeta.png')$$, 'Ruta de imagen no válida');
+select public.admin_spaghetti_add_hint('spaghetti/hints/h1.png', 'Base triangular') as hint1 \gset
+select public.admin_spaghetti_add_hint('spaghetti/hints/h2.png', 'Columnas') as hint2 \gset
+select public.admin_spaghetti_add_hint('spaghetti/hints/h3.png', 'Remate') as hint3 \gset
+select pg_temp.expect_error(format($$select public.admin_spaghetti_open_hint(%L)$$, :'hint1'), 'Inicia el cronómetro');
+reset role;
+
+-- Sin iniciar: todas bloqueadas, sin imagen ni título
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001');
+select pg_temp.assert(jsonb_array_length(public.get_player_modalities() -> 'spaghetti' -> 'hints') = 3, '3 pistas');
+select pg_temp.assert(not exists (select 1 from jsonb_array_elements(public.get_player_modalities() -> 'spaghetti' -> 'hints') h
+                                  where (h ->> 'is_open')::boolean or h ->> 'image_path' is not null or h ->> 'title' is not null), 'sin iniciar: todo oculto');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 1 ->> 'open_at_seconds')::int = 240, 'pista 2 a los 4:00');
+select pg_temp.assert((select count(*) from public.spaghetti_hints) = 0, 'el jugador no lee la tabla');
+reset role;
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select public.admin_spaghetti_timer('start', 30);
+reset role;
+-- Simulamos 5 minutos de prueba transcurridos
+update public.spaghetti_state set ends_at = now() + interval '25 minutes' where id = 1;
+select access_key as tvkey2 from public.tv_settings \gset
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 0 ->> 'image_path') = 'spaghetti/hints/h1.png', 'pista 1 abierta (1:00)');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 1 ->> 'title') = 'Columnas', 'pista 2 abierta (4:00) con título');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 2 ->> 'image_path') is null, 'pista 3 (7:00) bloqueada: sin imagen');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 2 ->> 'title') is null, 'pista 3 bloqueada: sin título');
+reset role;
+
+-- TV: calendario sin imágenes
+set role anon;
+select pg_temp.assert(jsonb_array_length(public.get_tv_state(:'tvkey2') -> 'timer' -> 'hints') = 3, 'TV: 3 pistas');
+select pg_temp.assert((public.get_tv_state(:'tvkey2') -> 'timer' -> 'hints' -> 0) ? 'image_path' = false, 'TV: sin imagen');
+select pg_temp.assert((public.get_tv_state(:'tvkey2') -> 'timer' -> 'hints' -> 2 ->> 'open_at_seconds')::int = 420, 'TV: pista 3 a los 7:00');
+reset role;
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.expect_error(format($$select public.admin_spaghetti_delete_hint(%L)$$, :'hint1'), 'ya está abierta');
+select pg_temp.expect_error(format($$select public.admin_spaghetti_update_hint(%L, 'x', 'spaghetti/hints/otra.png')$$, :'hint1'), 'ya la han visto');
+select pg_temp.expect_error(format($$select public.admin_spaghetti_reorder_hints(array[%L, %L, %L]::uuid[])$$, :'hint1', :'hint3', :'hint2'), 'ya abiertas no se pueden mover');
+select pg_temp.expect_error(format($$select public.admin_spaghetti_reorder_hints(array[%L, %L]::uuid[])$$, :'hint1', :'hint2'), 'todas las pistas');
+select public.admin_spaghetti_update_hint(:'hint3', 'Remate final');  -- cambiar el título de una bloqueada sí se puede
+select public.admin_spaghetti_open_hint(:'hint3');                    -- apertura manual
+select pg_temp.assert((public.admin_spaghetti_get_hints() -> 'hints' -> 2 ->> 'opened_manually')::boolean, 'pista 3 abierta a mano');
+select public.admin_spaghetti_timer('pause');
+reset role;
+
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001');
+select pg_temp.assert((public.get_player_modalities() -> 'spaghetti' -> 'hints' -> 2 ->> 'title') = 'Remate final', 'pista 3 visible tras apertura manual');
+reset role;
+
+-- Prueba terminada: todas abiertas; reinicio: todas bloqueadas y se olvidan aperturas manuales
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select public.admin_spaghetti_add_hint('spaghetti/hints/h4.png', 'Extra') as hint4 \gset
+select public.admin_spaghetti_timer('finish');
+select pg_temp.assert(not exists (select 1 from jsonb_array_elements(public.admin_spaghetti_get_hints() -> 'hints') h
+                                  where not (h ->> 'is_open')::boolean), 'al terminar: todas abiertas');
+select public.admin_spaghetti_timer('reset', 30);
+select pg_temp.assert(not exists (select 1 from jsonb_array_elements(public.admin_spaghetti_get_hints() -> 'hints') h
+                                  where (h ->> 'is_open')::boolean or (h ->> 'opened_manually')::boolean), 'reinicio: todo cerrado');
+-- Sin prueba activa se puede reordenar y eliminar; la numeración se compacta
+select public.admin_spaghetti_reorder_hints(array[:'hint4', :'hint1', :'hint2', :'hint3']::uuid[]);
+select pg_temp.assert((public.admin_spaghetti_get_hints() -> 'hints' -> 0 ->> 'id') = :'hint4', 'reordenada');
+select pg_temp.assert(public.admin_spaghetti_delete_hint(:'hint1') = 'spaghetti/hints/h1.png', 'devuelve la ruta');
+select pg_temp.assert((select array_agg(position order by position) from public.spaghetti_hints) = array[1, 2, 3], 'posiciones compactadas');
+reset role;
+
+-- Un jugador no puede usar las funciones del juez
+set role authenticated;
+select pg_temp.login('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_error($$select public.admin_spaghetti_get_hints()$$, 'reservada al juez');
+reset role;
+
 select 'TODAS LAS PRUEBAS SUPERADAS' as resultado;

@@ -61,6 +61,15 @@ export class PlayerStore {
       if (prev && m.crash.lineup_version > prev.crash.lineup_version && m.crash.lineup_updated_by_id !== this.state()?.player?.id) {
         this.toast.info(`${m.crash.lineup_updated_by ?? 'Alguien'} ha guardado el orden de pilotos de Crash`);
       }
+      if (prev) {
+        const before = new Set(prev.spaghetti.hints.filter((h) => h.is_open).map((h) => h.number));
+        const fresh = m.spaghetti.hints.filter((h) => h.is_open && !before.has(h.number));
+        // Al terminar la prueba se abren todas: no se avisa una a una
+        if (fresh.length && m.spaghetti.timer_status !== 'finished') {
+          this.toast.info(fresh.length === 1 ? `¡Nueva pista disponible! Pista ${fresh[0].number}` : `¡${fresh.length} pistas nuevas disponibles!`);
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(200);
+        }
+      }
       if (prev && m.overcooked.roster_version > prev.overcooked.roster_version && m.overcooked.roster_updated_by_id !== this.state()?.player?.id) {
         this.toast.info(`${m.overcooked.roster_updated_by ?? 'Alguien'} ha guardado los cocineros de Overcooked`);
       }
